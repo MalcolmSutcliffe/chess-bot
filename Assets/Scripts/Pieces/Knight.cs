@@ -5,7 +5,7 @@ using UnityEngine;
 public class Knight : Piece
 {
     public static List<Vector3Int> KNIGHT_MOVE_DIRECTIONS = new List<Vector3Int>{new Vector3Int(1, 2, 0), new Vector3Int(1, -2, 0), new Vector3Int(-1, 2, 0), new Vector3Int(-1, -2, 0), new Vector3Int(2, 1, 0), new Vector3Int(2, -1, 0), new Vector3Int(-2, 1, 0), new Vector3Int(-2, -1, 0)};
-    public Knight(Vector3Int position, PlayerType player, PieceType piece, GameObject gameObject) : base(position, player, piece, gameObject)
+    public Knight(Vector3Int position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
     {
         
     }
@@ -26,6 +26,10 @@ public class Knight : Piece
             possibleMoves.Add(move);
         }
         return possibleMoves;
+    }
+
+    public override Piece Copy(){
+        return new Knight(position, playerType, pieceType);
     }
 
 }

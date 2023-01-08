@@ -4,16 +4,8 @@ using UnityEngine;
 
 public class Pawn : Piece
 {
-    public bool enPassantable;
-    public Pawn(Vector3Int position, PlayerType player, PieceType piece, GameObject gameObject) : base(position, player, piece, gameObject)
+    public Pawn(Vector3Int position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
     {
-        enPassantable = false;
-        EventManager.instance.MoveOccured += MoveOccured;
-    }
-
-    public void MoveOccured()
-    {
-        enPassantable = false;
     }
 
     public override List<Vector3Int> GetPossibleMoves(GameLayout gameLayout)
@@ -56,7 +48,7 @@ public class Pawn : Piece
             {    if (gameLayout.state[position.x - 1, position.y].containsPiece && gameLayout.state[position.x - 1, position.y].piece.playerType != playerType && gameLayout.state[position.x - 1, position.y].piece.pieceType == PieceType.Pawn)
                 {
                     Pawn pawnLeft = (Pawn) gameLayout.state[position.x - 1, position.y].piece;
-                    if (pawnLeft.enPassantable)
+                    if (pawnLeft.enPassantable(gameLayout))
                         possibleMoves.Add(enPassantLeft);
                 }
             }
@@ -65,7 +57,7 @@ public class Pawn : Piece
                 if (gameLayout.state[position.x + 1, position.y].containsPiece && gameLayout.state[position.x + 1, position.y].piece.playerType != playerType && gameLayout.state[position.x + 1, position.y].piece.pieceType == PieceType.Pawn)
                 {
                     Pawn pawnRight = (Pawn) gameLayout.state[position.x + 1, position.y].piece;
-                    if (pawnRight.enPassantable)
+                    if (pawnRight.enPassantable(gameLayout))
                         possibleMoves.Add(enPassantRight);
                 }
             }
@@ -108,7 +100,7 @@ public class Pawn : Piece
             {    if (gameLayout.state[position.x - 1, position.y].containsPiece && gameLayout.state[position.x - 1, position.y].piece.playerType != playerType && gameLayout.state[position.x - 1, position.y].piece.pieceType == PieceType.Pawn)
                 {
                     Pawn pawnLeft = (Pawn) gameLayout.state[position.x - 1, position.y].piece;
-                    if (pawnLeft.enPassantable)
+                    if (pawnLeft.enPassantable(gameLayout))
                         possibleMoves.Add(enPassantLeft);
                 }
             }
@@ -117,7 +109,7 @@ public class Pawn : Piece
                 if (gameLayout.state[position.x + 1, position.y].containsPiece && gameLayout.state[position.x + 1, position.y].piece.playerType != playerType && gameLayout.state[position.x + 1, position.y].piece.pieceType == PieceType.Pawn)
                 {
                     Pawn pawnRight = (Pawn) gameLayout.state[position.x + 1, position.y].piece;
-                    if (pawnRight.enPassantable)
+                    if (pawnRight.enPassantable(gameLayout))
                         possibleMoves.Add(enPassantRight);
                 }
             }
@@ -126,10 +118,32 @@ public class Pawn : Piece
         return possibleMoves;
     }
 
-    public override void Move(Vector3Int position){
-        if (Vector3.Distance(this.position, position) >= 2)
-            enPassantable = true;
-        base.Move(position);
+    public bool enPassantable(GameLayout gameLayout)
+    {
+        if (gameLayout.previousMove == null)
+        {
+            return false;
+        }
+        if (playerType == PlayerType.White)
+        {
+            if (position.y != 3){
+                return false;
+            }
+            // if previous move was moving this pawn forward
+            return (gameLayout.previousMove == new Vector3Int[]{new Vector3Int(position.x, 1, 0), new Vector3Int(position.x, 3, 0)});
+        }
+        if (playerType == PlayerType.Black)
+        {
+            if (position.y != 6){
+                return false;
+            }
+            // if previous move was moving this pawn forward
+            return (gameLayout.previousMove == new Vector3Int[]{new Vector3Int(position.x, 6, 0), new Vector3Int(position.x, 4, 0)});
+        }
+        return false;
     }
 
+    public override Piece Copy(){
+        return new Pawn(position, playerType, pieceType);
+    }
 }

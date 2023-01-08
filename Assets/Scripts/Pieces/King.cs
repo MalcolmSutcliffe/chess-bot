@@ -6,7 +6,7 @@ public class King : Piece
 {
     public bool castlingRights;
     public static List<Vector3Int> KING_MOVE_DIRECTIONS = new List<Vector3Int>{new Vector3Int(-1, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0), new Vector3Int(-1, -1, 0), new Vector3Int(-1, 1, 0), new Vector3Int(1, -1, 0), new Vector3Int(1, 1, 0)};
-    public King(Vector3Int position, PlayerType player, PieceType piece, GameObject gameObject) : base(position, player, piece, gameObject)
+    public King(Vector3Int position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
     {
         castlingRights = true;
     }
@@ -173,6 +173,10 @@ public class King : Piece
     public override void Move(Vector3Int position){
         castlingRights = false;
         base.Move(position);
+    }
+
+    public override Piece Copy(){
+        return new King(position, playerType, pieceType);
     }
 
 }
