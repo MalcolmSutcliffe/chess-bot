@@ -14,6 +14,9 @@ public class Game : MonoBehaviour
 
     public PlayerType playerMove;
 
+    private GameObject isInCheck;
+    public GameObject isInCheckPrefab;
+
     // piece prefabs
     public GameObject whitePawnPrefab;
     public GameObject whiteRookPrefab;
@@ -96,6 +99,25 @@ public class Game : MonoBehaviour
         else if (playerMove == PlayerType.Black)
         {
             playerMove = PlayerType.White;
+        }
+        IsInCheck();
+    }
+
+    public void IsInCheck()
+    {
+        Destroy(isInCheck);
+        if (gameLayout.IsKingInCheck(playerMove)){
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    if (gameLayout.state[x,y].containsPiece && gameLayout.state[x,y].piece.playerType == playerMove && gameLayout.state[x,y].piece.pieceType == PieceType.King)
+                    {
+                        isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
+                        isInCheck.transform.position = new Vector3Int(x, y, 0);
+                    }
+                }
+            }
         }
     }
 
