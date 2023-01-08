@@ -18,66 +18,58 @@ public class UserInterface : MonoBehaviour
         tileGrid = GetComponentInChildren<Tilemap>();
     }
 
-    void Update()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            OnClicked();
-        }
-    }
-
-    void OnClicked()
+    public void OnClicked(GameLayout gameLayout, PlayerType playerMove)
     {
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int tilePos = tileGrid.WorldToCell(worldPos);
         
         if (selectedPiece != null)
         {
-            if (!Game.instance.gameLayout.IsInBoard(tilePos))
+            if (!gameLayout.IsInBoard(tilePos))
             {
                 Unselect();
                 return;
             }
-            List<Vector3Int> legalMoves = selectedPiece.GetLegalMoves(Game.instance.gameLayout);
+            List<Vector3Int> legalMoves = selectedPiece.GetLegalMoves(gameLayout);
             if (legalMoves.Contains(tilePos))
             {
-                Game.instance.Move(selectedPiece.position, tilePos);
+                EventManager.instance.OnMoveOccured(selectedPiece.position, tilePos);
                 Unselect();
                 return;
             }
-            if (Game.instance.gameLayout.state[tilePos.x, tilePos.y].containsPiece && tilePos == selectedPiece.position)
+            if (gameLayout.state[tilePos.x, tilePos.y].containsPiece && tilePos == selectedPiece.position)
             {
                 Unselect();
                 return;
             }
-            if (Game.instance.gameLayout.state[tilePos.x, tilePos.y].containsPiece && Game.instance.gameLayout.state[tilePos.x, tilePos.y].piece.playerType == Game.instance.playerMove)
+            if (gameLayout.state[tilePos.x, tilePos.y].containsPiece && gameLayout.state[tilePos.x, tilePos.y].piece.playerType == Game.instance.playerMove)
             {
                 Unselect();
-                Select(tilePos);
+                Select(gameLayout, tilePos);
                 return;
             }
             return;
         }
 
-        if (!Game.instance.gameLayout.state[tilePos.x, tilePos.y].containsPiece)
+        if (!gameLayout.state[tilePos.x, tilePos.y].containsPiece)
         {
             Unselect();
             return;
         }
         
-        if (!(Game.instance.gameLayout.state[tilePos.x, tilePos.y].piece.playerType == Game.instance.playerMove))
+        if (!(gameLayout.state[tilePos.x, tilePos.y].piece.playerType == playerMove))
         {
             Unselect();
             return;
         }
-        Select(tilePos);
+        Select(gameLayout, tilePos);
     }
 
-    private void HighlightPostions(List<Vector3Int> positions)
+    private void HighlightPostions(GameLayout gameLayout, List<Vector3Int> positions)
     {
         foreach(var pos in positions)
         {
-            if (Game.instance.gameLayout.state[pos.x, pos.y].containsPiece)
+            if (gameLayout.state[pos.x, pos.y].containsPiece)
             {
                 var newObject = Instantiate(attackingPieceHighlightPrefab, gameObject.transform);
                 activeGameObjects.Add(newObject);
@@ -92,13 +84,18 @@ public class UserInterface : MonoBehaviour
         }
     }
 
-    private void Select(Vector3Int tilePos)
+    private void Select(GameLayout gameLayout, Vector3Int tilePos)
     {
-        selectedPiece = Game.instance.gameLayout.state[tilePos.x, tilePos.y].piece;
+        if (!gameLayout.state[tilePos.x, tilePos.y].containsPiece)
+        {
+            Unselect();
+            return;
+        }
+        selectedPiece = gameLayout.state[tilePos.x, tilePos.y].piece;
         var newObject = Instantiate(selectedHighlightPrefab, gameObject.transform);
         newObject.transform.position = tilePos;
         activeGameObjects.Add(newObject);
-        HighlightPostions(selectedPiece.GetLegalMoves(Game.instance.gameLayout));
+        HighlightPostions(gameLayout, selectedPiece.GetLegalMoves(gameLayout));
     }
 
     private void Unselect()

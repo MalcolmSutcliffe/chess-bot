@@ -15,12 +15,12 @@ public class EventManager: MonoBehaviour
         }
     }
 
-    public event Action MoveOccured;
+    public event Action<Vector3Int, Vector3Int> MoveOccured;
 
     // more events added here
 
-    public void OnMoveOccured()
+    public void OnMoveOccured(Vector3Int fromPos, Vector3Int toPos)
     {
-        MoveOccured?.Invoke();
+        MoveOccured?.Invoke(fromPos, toPos);
     }
 }

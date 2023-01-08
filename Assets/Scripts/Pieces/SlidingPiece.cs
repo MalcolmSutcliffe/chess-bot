@@ -6,7 +6,7 @@ public abstract class SlidingPiece : Piece
 {
     protected List<Vector3Int> moveDirections;
 
-    public SlidingPiece(Vector3Int position, PlayerType player, PieceType piece, List<Vector3Int> moveDirections, GameObject gameObject) : base(position, player, piece, gameObject)
+    public SlidingPiece(Vector3Int position, PlayerType playerType, PieceType pieceType, List<Vector3Int> moveDirections) : base(position, playerType, pieceType)
     {
         this.moveDirections = moveDirections;
     }
@@ -40,6 +40,6 @@ public abstract class SlidingPiece : Piece
             possibleMovesInDirection.Add(move);
         }
         return possibleMovesInDirection;
-    } 
+    }
 
 }
