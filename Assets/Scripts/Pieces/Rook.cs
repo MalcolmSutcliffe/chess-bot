@@ -9,4 +9,8 @@ public class Rook : SlidingPiece
     {
 
     }
+    public void Move(Vector3Int position){
+        base.Move(position);
+        castlingRights = false;
+    }
 }

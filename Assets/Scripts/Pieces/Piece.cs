@@ -13,10 +13,10 @@ public enum PieceType {
 
 public abstract class Piece
 {
-    protected Vector3Int position;
+    public Vector3Int position {get; protected set;}
     public PlayerType playerType {get; protected set;}
     public PieceType pieceType {get; protected set;}
-    private GameObject gameObject;
+    public GameObject gameObject;
 
     public Piece(Vector3Int position, PlayerType playerType, PieceType pieceType, GameObject gameObject){
         this.position = position;
@@ -46,7 +46,8 @@ public abstract class Piece
 
     public abstract List<Vector3Int> GetPossibleMoves(GameLayout gameLayout);
 
-    public void Move(Game game, Vector3Int position){
+    public void Move(Vector3Int position){
+        this.position = position;
         this.gameObject.transform.position = position;
     }
     

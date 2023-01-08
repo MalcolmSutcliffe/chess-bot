@@ -12,8 +12,7 @@ public class Game : MonoBehaviour
     public Player playerWhite {get; private set;}
     public Player playerBlack {get; private set;}
 
-    // prefabs
-    public GameObject legalMovePrefab;
+    public PlayerType playerMove;
 
     // piece prefabs
     public GameObject whitePawnPrefab;
@@ -45,13 +44,13 @@ public class Game : MonoBehaviour
         board.DrawGrid(size);
         gameLayout = new GameLayout(size);
         InitializeGame();
-        HighlightPostions(playerWhite.pieces[7].GetLegalMoves(this.gameLayout));
-        // HighlightPostions(playerWhite.pieces[3].GetPossibleMoves(this.gameLayout));
     }
 
     private void InitializeGame(){
         playerWhite = new Player(PlayerType.White);
         playerBlack = new Player(PlayerType.Black);
+
+        playerMove = PlayerType.White;
 
         // set board to default value
         InitPiece(new Vector3Int(0, 0), PlayerType.White, PieceType.Rook);
@@ -77,12 +76,26 @@ public class Game : MonoBehaviour
             InitPiece(new Vector3Int(y, 6), PlayerType.Black, PieceType.Pawn);
     }
 
-    private void HighlightPostions(List<Vector3Int> positions)
+    public void Move(Vector3Int fromPos, Vector3Int toPos)
     {
-        foreach(var pos in positions)
+        if (!gameLayout.state[fromPos.x, fromPos.y].containsPiece)
         {
-            var newObject = Instantiate(legalMovePrefab, gameObject.transform);
-            newObject.transform.position = pos;
+            return;
+        }
+        Piece piece = gameLayout.state[fromPos.x, fromPos.y].piece;
+        if (gameLayout.state[toPos.x, toPos.y].containsPiece)
+        {
+            Destroy(gameLayout.state[toPos.x, toPos.y].piece.gameObject);
+        }
+        gameLayout.MovePiece(fromPos, toPos);
+        piece.Move(toPos);
+        if (playerMove == PlayerType.White)
+        {
+            playerMove = PlayerType.Black;
+        }
+        else if (playerMove == PlayerType.Black)
+        {
+            playerMove = PlayerType.White;
         }
     }
 
