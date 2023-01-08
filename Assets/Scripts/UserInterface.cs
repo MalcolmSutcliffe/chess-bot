@@ -10,6 +10,7 @@ public class UserInterface : MonoBehaviour
     public Tilemap tileGrid {get; private set;}
     public GameObject legalMovePrefab;
     public GameObject selectedHighlightPrefab;
+    public GameObject attackingPieceHighlightPrefab;
     private List<GameObject> activeGameObjects = new List<GameObject>();
 
     void Awake()
@@ -69,9 +70,18 @@ public class UserInterface : MonoBehaviour
     {
         foreach(var pos in positions)
         {
-            var newObject = Instantiate(legalMovePrefab, gameObject.transform);
-            activeGameObjects.Add(newObject);
-            newObject.transform.position = pos;
+            if (Game.instance.gameLayout.state[pos.x, pos.y].containsPiece)
+            {
+                var newObject = Instantiate(attackingPieceHighlightPrefab, gameObject.transform);
+                activeGameObjects.Add(newObject);
+                newObject.transform.position = pos;
+                continue;
+            }
+            else{
+                var newObject = Instantiate(legalMovePrefab, gameObject.transform);
+                activeGameObjects.Add(newObject);
+                newObject.transform.position = pos;
+            }
         }
     }
 

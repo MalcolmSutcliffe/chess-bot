@@ -32,7 +32,7 @@ public class King : Piece
         return possibleMoves;
     }
 
-    public void Move(Vector3Int position){
+    public new void Move(Vector3Int position){
         base.Move(position);
         castlingRights = false;
     }
