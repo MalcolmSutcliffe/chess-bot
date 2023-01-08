@@ -25,19 +25,27 @@ public class UserInterface : MonoBehaviour
         
         if (selectedPiece != null)
         {
-            if (!gameLayout.IsInBoard(tilePos))
+            if (!gameLayout.IsInBoard(new int[] {tilePos.x, tilePos.y}))
             {
                 Unselect();
                 return;
             }
-            List<Vector3Int> legalMoves = selectedPiece.GetLegalMoves(gameLayout);
-            if (legalMoves.Contains(tilePos))
+            
+            List<int[]> legalMoves = selectedPiece.GetLegalMoves(gameLayout);
+            
+            List<Vector3Int> legalMovesV3 = new List<Vector3Int>();
+            foreach (var m in legalMoves)
             {
-                EventManager.instance.OnMoveOccured(selectedPiece.position, tilePos);
+                legalMovesV3.Add(new Vector3Int(m[0], m[1], 0));
+            }
+
+            if (legalMovesV3.Contains(tilePos))
+            {
+                EventManager.instance.OnMoveOccured(selectedPiece.position, new int[]{tilePos.x, tilePos.y});
                 Unselect();
                 return;
             }
-            if (gameLayout.state[tilePos.x, tilePos.y].containsPiece && tilePos == selectedPiece.position)
+            if (gameLayout.state[tilePos.x, tilePos.y].containsPiece && tilePos.x == selectedPiece.position[0] && tilePos.y == selectedPiece.position[1])
             {
                 Unselect();
                 return;
@@ -65,21 +73,21 @@ public class UserInterface : MonoBehaviour
         Select(gameLayout, tilePos);
     }
 
-    private void HighlightPostions(GameLayout gameLayout, List<Vector3Int> positions)
+    private void HighlightPostions(GameLayout gameLayout, List<int[]> positions)
     {
         foreach(var pos in positions)
         {
-            if (gameLayout.state[pos.x, pos.y].containsPiece)
+            if (gameLayout.state[pos[0], pos[1]].containsPiece)
             {
                 var newObject = Instantiate(attackingPieceHighlightPrefab, gameObject.transform);
                 activeGameObjects.Add(newObject);
-                newObject.transform.position = pos;
+                newObject.transform.position = new Vector3Int(pos[0], pos[1], 0);
                 continue;
             }
             else{
                 var newObject = Instantiate(legalMovePrefab, gameObject.transform);
                 activeGameObjects.Add(newObject);
-                newObject.transform.position = pos;
+                newObject.transform.position = new Vector3Int(pos[0], pos[1], 0);
             }
         }
     }

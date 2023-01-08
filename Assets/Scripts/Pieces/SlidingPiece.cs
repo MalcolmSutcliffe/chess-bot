@@ -1,36 +1,35 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public abstract class SlidingPiece : Piece
 {
-    protected List<Vector3Int> moveDirections;
+    protected List<int[]> moveDirections;
 
-    public SlidingPiece(Vector3Int position, PlayerType playerType, PieceType pieceType, List<Vector3Int> moveDirections) : base(position, playerType, pieceType)
+    public SlidingPiece(int[] position, PlayerType playerType, PieceType pieceType, List<int[]> moveDirections) : base(position, playerType, pieceType)
     {
         this.moveDirections = moveDirections;
     }
 
-    public override List<Vector3Int> GetPossibleMoves(GameLayout gameLayout)
+    public override List<int[]> GetPossibleMoves(GameLayout gameLayout)
     {
-        List<Vector3Int> possibleMoves = new List<Vector3Int>();
-        foreach (var dir in moveDirections)
+        List<int[]> possibleMoves = new List<int[]>();
+        foreach (var direction in moveDirections)
         {
-            possibleMoves.AddRange(GetPossibleMovesInDirection(gameLayout, dir));
+            possibleMoves.AddRange(GetPossibleMovesInDirection(gameLayout, direction));
         }
         return possibleMoves;
     }
 
-    private List<Vector3Int> GetPossibleMovesInDirection(GameLayout gameLayout, Vector3Int direction)
+    private List<int[]> GetPossibleMovesInDirection(GameLayout gameLayout, int[] direction)
     {
-        List<Vector3Int> possibleMovesInDirection = new List<Vector3Int>();
-        Vector3Int move = position;
-        while(gameLayout.IsInBoard(move + direction))
+        List<int[]> possibleMovesInDirection = new List<int[]>();
+        int[] move = position;
+        while(gameLayout.IsInBoard(new int[] {move[0] + direction[0], move[1] + direction[1]} ))
         {
-            move = move + direction;
-            if (gameLayout.state[move.x, move.y].containsPiece)
+            move = new int[] {move[0] + direction[0], move[1] + direction[1]};
+            if (gameLayout.state[move[0], move[1]].containsPiece)
             {
-                if (gameLayout.state[move.x, move.y].piece.playerType == this.playerType)
+                if (gameLayout.state[move[0], move[1]].piece.playerType == this.playerType)
                 {
                     break;
                 }

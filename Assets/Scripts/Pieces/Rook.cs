@@ -1,20 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 public class Rook : SlidingPiece
 {
-    public static List<Vector3Int> ROOK_MOVE_DIRECTIONS = new List<Vector3Int>{new Vector3Int(-1, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0)};
+    public static List<int[]> ROOK_MOVE_DIRECTIONS = new List<int[]> { new int[] {-1, 0}, new int[] {1, 0}, new int[] {0, 1}, new int[] {0, -1} };
     public bool castlingRights;
-    public Rook(Vector3Int position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType, ROOK_MOVE_DIRECTIONS)
+    public Rook(int[] position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType, ROOK_MOVE_DIRECTIONS)
     {
         castlingRights = true;
     }
-    public override void Move(Vector3Int position){
+    public override void Move(int[] position){
         castlingRights = false;
         base.Move(position);
     }
 
     public override Piece Copy(){
-        return new Rook(position, playerType, pieceType);
+        return new Rook(new int[] {position[0], position[1]} , playerType, pieceType);
     }
 }

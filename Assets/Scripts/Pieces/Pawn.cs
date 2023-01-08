@@ -1,12 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class Pawn : Piece
 {
     private int travelDirection;
     private int startingYPosition;
-    public Pawn(Vector3Int position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
+    public Pawn(int[] position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
     {
         if (playerType == PlayerType.White)
         {
@@ -20,11 +19,11 @@ public class Pawn : Piece
         }
     }
 
-    public override List<Vector3Int> GetPossibleMoves(GameLayout gameLayout)
+    public override List<int[]> GetPossibleMoves(GameLayout gameLayout)
     {
-        List<Vector3Int> possibleMoves = new List<Vector3Int>();
+        List<int[]> possibleMoves = new List<int[]>();
 
-        Vector3Int moveForward1 = position + new Vector3Int(0, travelDirection, 0);
+        int[] moveForward1 = new int[] {position[0], position[1] + travelDirection};
 
         if (!gameLayout.IsInBoard(moveForward1))
         {
@@ -32,22 +31,22 @@ public class Pawn : Piece
         }
 
         // move forward 1
-        if (!gameLayout.state[moveForward1.x, moveForward1.y].containsPiece)
+        if (!gameLayout.state[moveForward1[0], moveForward1[1]].containsPiece)
         {
             possibleMoves.Add(moveForward1);
         }
 
         // move forward 2
-        Vector3Int moveForward2 = position + new Vector3Int(0, 2*travelDirection, 0);
+        int[] moveForward2 = new int[] {position[0], position[1] + 2*travelDirection};
         
-        if (this.position.y == startingYPosition && !gameLayout.state[moveForward2.x, moveForward2.y].containsPiece)
+        if (this.position[1] == startingYPosition && !gameLayout.state[moveForward2[0], moveForward2[1]].containsPiece)
         {
             possibleMoves.Add(moveForward2);
         }
 
         // capture
-        Vector3Int captureLeft = position + new Vector3Int(-1, travelDirection, 0);
-        Vector3Int captureRight = position + new Vector3Int(1, travelDirection, 0);
+        int[] captureLeft = new int[] {position[0] - 1, position[1] + travelDirection};
+        int[] captureRight = new int[] {position[0] + 1, position[1] + travelDirection};
         
         if (CheckCapture(gameLayout, -1))
         {
@@ -59,17 +58,14 @@ public class Pawn : Piece
         }
         
         // en passant
-        Vector3Int enPassantLeft = position + new Vector3Int(-1, travelDirection, 0);
-        Vector3Int enPassantRight = position + new Vector3Int(1, travelDirection, 0);
-        
         if (CheckEnPasant(gameLayout, -1))
         {
-            possibleMoves.Add(enPassantLeft);
+            possibleMoves.Add(captureLeft);
         }
 
         if (CheckEnPasant(gameLayout, 1))
         {
-            possibleMoves.Add(enPassantRight);
+            possibleMoves.Add(captureRight);
         }
 
         return possibleMoves;
@@ -77,14 +73,17 @@ public class Pawn : Piece
 
     public bool CheckCapture(GameLayout gameLayout, int direction)
     {
-        if (!gameLayout.IsInBoard(position + new Vector3Int(direction, 0, 0))){
+        if (!gameLayout.IsInBoard(new int[] {position[0] + direction, position[1]}))
+        {
             return false;
         }
-        if (!gameLayout.state[position.x + direction, position.y + travelDirection].containsPiece)
+
+        if (!gameLayout.state[position[0] + direction, position[1] + travelDirection].containsPiece)
         {
             return false;
         } 
-        if (gameLayout.state[position.x + direction, position.y + travelDirection].piece.playerType == this.playerType)
+
+        if (gameLayout.state[position[0] + direction, position[1] + travelDirection].piece.playerType == this.playerType)
         {
             return false;
         }
@@ -94,22 +93,28 @@ public class Pawn : Piece
 
     public bool CheckEnPasant(GameLayout gameLayout, int direction)
     {
-        if (!gameLayout.IsInBoard(position + new Vector3Int(direction, 0, 0))){
+        if (!gameLayout.IsInBoard(new int[] {position[0] + direction, position[1]}))
+        {
             return false;
         }
-        if (!gameLayout.state[position.x + direction, position.y].containsPiece)
+
+        if (!gameLayout.state[position[0] + direction, position[1]].containsPiece)
         {
             return false;
         } 
-        if (gameLayout.state[position.x + direction, position.y].piece.playerType == playerType)
+
+        if (gameLayout.state[position[0] + direction, position[1]].piece.playerType == playerType)
         {
             return false;
         }
-        if (gameLayout.state[position.x + direction, position.y].piece.pieceType != PieceType.Pawn)
+
+        if (gameLayout.state[position[0] + direction, position[1]].piece.pieceType != PieceType.Pawn)
         {
             return false;
         }
-        Pawn pawnAdj = (Pawn) gameLayout.state[position.x + direction, position.y].piece;
+
+        Pawn pawnAdj = (Pawn) gameLayout.state[position[0]+direction, position[1]].piece;
+        
         if (!pawnAdj.enPassantable(gameLayout))
         {
             return false;
@@ -126,11 +131,11 @@ public class Pawn : Piece
             return false;
         }
         
-        if (position.y != startingYPosition + 2*travelDirection){
+        if (position[1] != startingYPosition + 2*travelDirection){
             return false;
         }
 
-        if (gameLayout.previousMove[1] != position)
+        if (gameLayout.previousMove[1][0] != position[0] || gameLayout.previousMove[1][1] != position[1] )
         {
             return false;
         }
@@ -139,6 +144,6 @@ public class Pawn : Piece
     }
 
     public override Piece Copy(){
-        return new Pawn(position, playerType, pieceType);
+        return new Pawn(new int[]{position[0], position[1]}, playerType, pieceType);
     }
 }

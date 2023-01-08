@@ -58,32 +58,32 @@ public class Game : MonoBehaviour
         playerMove = PlayerType.White;
 
         // set board to default value
-        InitPiece(new Vector3Int(0, 0), PlayerType.White, PieceType.Rook);
-        InitPiece(new Vector3Int(7, 0), PlayerType.White, PieceType.Rook);
-        InitPiece(new Vector3Int(1, 0), PlayerType.White, PieceType.Knight);
-        InitPiece(new Vector3Int(6, 0), PlayerType.White, PieceType.Knight);
-        InitPiece(new Vector3Int(2, 0), PlayerType.White, PieceType.Bishop);
-        InitPiece(new Vector3Int(5, 0), PlayerType.White, PieceType.Bishop);
-        InitPiece(new Vector3Int(3, 0), PlayerType.White, PieceType.Queen);
-        InitPiece(new Vector3Int(4, 0), PlayerType.White, PieceType.King);
+        InitPiece(new int[] {0, 0}, PlayerType.White, PieceType.Rook);
+        InitPiece(new int[] {7, 0}, PlayerType.White, PieceType.Rook);
+        InitPiece(new int[] {1, 0}, PlayerType.White, PieceType.Knight);
+        InitPiece(new int[] {6, 0}, PlayerType.White, PieceType.Knight);
+        InitPiece(new int[] {2, 0}, PlayerType.White, PieceType.Bishop);
+        InitPiece(new int[] {5, 0}, PlayerType.White, PieceType.Bishop);
+        InitPiece(new int[] {3, 0}, PlayerType.White, PieceType.Queen);
+        InitPiece(new int[] {4, 0}, PlayerType.White, PieceType.King);
         for (int y = 0; y < size; y++)
-            InitPiece(new Vector3Int(y, 1), PlayerType.White, PieceType.Pawn);
+            InitPiece(new int[] {y, 1}, PlayerType.White, PieceType.Pawn);
         
-        InitPiece(new Vector3Int(0, 7), PlayerType.Black, PieceType.Rook);
-        InitPiece(new Vector3Int(7, 7), PlayerType.Black, PieceType.Rook);
-        InitPiece(new Vector3Int(1, 7), PlayerType.Black, PieceType.Knight);
-        InitPiece(new Vector3Int(6, 7), PlayerType.Black, PieceType.Knight);
-        InitPiece(new Vector3Int(2, 7), PlayerType.Black, PieceType.Bishop);
-        InitPiece(new Vector3Int(5, 7), PlayerType.Black, PieceType.Bishop);
-        InitPiece(new Vector3Int(3, 7), PlayerType.Black, PieceType.Queen);
-        InitPiece(new Vector3Int(4, 7), PlayerType.Black, PieceType.King);
+        InitPiece(new int[] {0, 7}, PlayerType.Black, PieceType.Rook);
+        InitPiece(new int[] {7, 7}, PlayerType.Black, PieceType.Rook);
+        InitPiece(new int[] {1, 7}, PlayerType.Black, PieceType.Knight);
+        InitPiece(new int[] {6, 7}, PlayerType.Black, PieceType.Knight);
+        InitPiece(new int[] {2, 7}, PlayerType.Black, PieceType.Bishop);
+        InitPiece(new int[] {5, 7}, PlayerType.Black, PieceType.Bishop);
+        InitPiece(new int[] {3, 7}, PlayerType.Black, PieceType.Queen);
+        InitPiece(new int[] {4, 7}, PlayerType.Black, PieceType.King);
         for (int y = 0; y < size; y++)
-            InitPiece(new Vector3Int(y, 6), PlayerType.Black, PieceType.Pawn);
+            InitPiece(new int[] {y, 6}, PlayerType.Black, PieceType.Pawn);
         
         DrawBoard();
     }
 
-    public void Move(Vector3Int fromPos, Vector3Int toPos)
+    public void Move(int[] fromPos, int[] toPos)
     {
         gameLayout.MovePiece(fromPos, toPos);
         EndTurn();
@@ -164,22 +164,22 @@ public class Game : MonoBehaviour
         Destroy(previousMoveHighlights[1]);
         previousMoveHighlights[0] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
         previousMoveHighlights[1] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
-        previousMoveHighlights[0].transform.position = gameLayout.previousMove[0];
-        previousMoveHighlights[1].transform.position = gameLayout.previousMove[1];
+        previousMoveHighlights[0].transform.position = new Vector3Int(gameLayout.previousMove[0][0], gameLayout.previousMove[0][1], 0);
+        previousMoveHighlights[1].transform.position = new Vector3Int(gameLayout.previousMove[1][0], gameLayout.previousMove[1][1], 0);
     }
     
     public void DisplayCheck()
     {
         Destroy(isInCheck);
-        Vector3Int kingPosition = gameLayout.GetKingPosition(playerMove);
-        if (gameLayout.IsKingInCheck(playerMove, kingPosition))
+        int[] kingPosition = gameLayout.GetKingPosition(playerMove);
+        if (gameLayout.IsKingInCheck(playerMove, gameLayout.GetKingPosition(playerMove)))
         {
             isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
-            isInCheck.transform.position = kingPosition;
+            isInCheck.transform.position = new Vector3Int(kingPosition[0], kingPosition[1], 0);
         }
     }
 
-    private void InitPiece(Vector3Int position, PlayerType playerType, PieceType pieceType)
+    private void InitPiece(int[] position, PlayerType playerType, PieceType pieceType)
     {
         Piece newPiece;
         switch (pieceType)
