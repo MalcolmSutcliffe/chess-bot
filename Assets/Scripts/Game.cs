@@ -156,8 +156,8 @@ public class Game : MonoBehaviour
         {
             playerMove = PlayerType.White;
         }
-        DisplayCheck();
         CheckEndGame();
+        DisplayCheck();
     }
     
     public void DisplayCheck()
@@ -188,7 +188,10 @@ public class Game : MonoBehaviour
         }
         if (gameLayout.IsKingInCheck(playerMove, gameLayout.GetKingPosition(playerMove)))
         {
-            print(playerMove.ToString() + " wins by checkmate!");
+            if (playerMove == PlayerType.White)
+                print("black wins by checkmate!");
+            if (playerMove == PlayerType.Black)
+                print("white wins by checkmate!");
             return true;
         }
         print("stalemate!");

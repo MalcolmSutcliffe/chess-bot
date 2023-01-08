@@ -42,10 +42,17 @@ public class UserInterface : MonoBehaviour
             if (legalMoves.Contains(tilePos))
             {
                 Game.instance.Move(selectedPiece.position, tilePos);
+                Unselect();
+                return;
             }
-            Unselect();
+            if (Game.instance.gameLayout.state[tilePos.x, tilePos.y].containsPiece && tilePos == selectedPiece.position)
+            {
+                Unselect();
+                return;
+            }
             if (Game.instance.gameLayout.state[tilePos.x, tilePos.y].containsPiece && Game.instance.gameLayout.state[tilePos.x, tilePos.y].piece.playerType == Game.instance.playerMove)
             {
+                Unselect();
                 Select(tilePos);
                 return;
             }
