@@ -45,7 +45,7 @@ public class Game : MonoBehaviour
         board.DrawGrid(size);
         gameLayout = new GameLayout(size);
         InitializeGame();
-        // HighlightPostions(playerWhite.pieces[7].GetPossibleMoves(this.gameLayout));
+        HighlightPostions(playerWhite.pieces[7].GetLegalMoves(this.gameLayout));
         // HighlightPostions(playerWhite.pieces[3].GetPossibleMoves(this.gameLayout));
     }
 

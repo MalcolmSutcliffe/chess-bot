@@ -25,7 +25,6 @@ public abstract class Piece
         this.gameObject = gameObject;
         this.gameObject.transform.position = position;
     }
-
     public List<Vector3Int> GetLegalMoves(GameLayout gameLayout){
         
         List<Vector3Int> possibleMoves = GetPossibleMoves(gameLayout);
@@ -34,7 +33,8 @@ public abstract class Piece
         foreach (var move in possibleMoves)
         {
             GameLayout virtualBoard = gameLayout.DeepCopy();
-            if (gameLayout.IsKingInCheck(this.playerType))
+            virtualBoard.MovePiece(position, move);
+            if (virtualBoard.IsKingInCheck(this.playerType))
             {
                 continue;
             }

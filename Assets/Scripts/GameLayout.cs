@@ -45,26 +45,35 @@ public class GameLayout{
 
     public bool IsKingInCheck(PlayerType playerType)
     {
-        List<Piece> piecesToCheck;
-        if (playerType == PlayerType.White)
+        List<Piece> piecesToCheck = new List<Piece>();
+        for (int x = 0; x < size; x++)
         {
-            piecesToCheck = Game.instance.playerBlack.pieces;
+            for (int y = 0; y < size; y++)
+            {
+                if (state[x,y].containsPiece && state[x,y].piece.playerType != playerType)
+                {
+                    piecesToCheck.Add(state[x,y].piece);
+                }
+            }
         }
-        else{
-            piecesToCheck = Game.instance.playerWhite.pieces;
-        }
-
+        
         foreach (var piece in piecesToCheck)
         {
             foreach(var possibleMove in piece.GetPossibleMoves(this))
             {
-                if (this.state[possibleMove.x, possibleMove.y].containsPiece)
+                if (!this.state[possibleMove.x, possibleMove.y].containsPiece)
                 {
-                    if (this.state[possibleMove.x, possibleMove.y].piece.playerType == playerType && this.state[possibleMove.x, possibleMove.y].piece.pieceType == PieceType.King)
-                    {
-                        return true;
-                    }
+                    continue;
                 }
+                if (!(this.state[possibleMove.x, possibleMove.y].piece.playerType == playerType))
+                {
+                    continue;
+                }
+                if (!(this.state[possibleMove.x, possibleMove.y].piece.pieceType == PieceType.King))
+                {
+                    continue;
+                }
+                return true;
             }
         }
         return false;
