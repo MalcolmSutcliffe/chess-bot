@@ -43,7 +43,22 @@ public class GameLayout{
         return position.x >= 0 && position.x < size && position.y >= 0 && position.y < size;
     }
 
-    public bool IsKingInCheck(PlayerType playerType)
+    public Vector3Int GetKingPosition(PlayerType playerType)
+    {
+        for (int x = 0; x < size; x++)
+        {
+            for (int y = 0; y < size; y++)
+            {
+                if (state[x,y].containsPiece && state[x,y].piece.playerType == playerType && state[x,y].piece.pieceType == PieceType.King)
+                {
+                    return new Vector3Int(x, y, 0);
+                }
+            }
+        }
+        return new Vector3Int(0, 0, 0);
+    }
+
+    public bool IsKingInCheck(PlayerType playerType, Vector3Int kingPosition)
     {
         List<Piece> piecesToCheck = new List<Piece>();
         for (int x = 0; x < size; x++)
@@ -59,22 +74,8 @@ public class GameLayout{
         
         foreach (var piece in piecesToCheck)
         {
-            foreach(var possibleMove in piece.GetPossibleMoves(this))
-            {
-                if (!this.state[possibleMove.x, possibleMove.y].containsPiece)
-                {
-                    continue;
-                }
-                if (!(this.state[possibleMove.x, possibleMove.y].piece.playerType == playerType))
-                {
-                    continue;
-                }
-                if (!(this.state[possibleMove.x, possibleMove.y].piece.pieceType == PieceType.King))
-                {
-                    continue;
-                }
+            if (piece.GetPossibleMoves(this).Contains(kingPosition))
                 return true;
-            }
         }
         return false;
     }

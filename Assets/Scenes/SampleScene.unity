@@ -133,7 +133,6 @@ GameObject:
   m_Component:
   - component: {fileID: 393550485}
   - component: {fileID: 393550483}
-  - component: {fileID: 393550486}
   m_Layer: 0
   m_Name: UserInterface
   m_TagString: Untagged
@@ -195,20 +194,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &393550486
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 393550482}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 17d1b3f60918b4f49b4ffa674a934cd9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  legalMovePrefab: {fileID: 1076949981256920288, guid: f10d58c2eee5fee498d1770747475a21, type: 3}
-  selectedHighlightPrefab: {fileID: 8591586196345364359, guid: a344a095dad1cbb488e84b5c6a4687d6, type: 3}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -325,6 +310,7 @@ MonoBehaviour:
   board: {fileID: 1383947274}
   size: 8
   playerMove: 0
+  isInCheckPrefab: {fileID: 1898370846522680573, guid: e2092ec2af57311499a52d001ffa89be, type: 3}
   whitePawnPrefab: {fileID: 1429731192175956259, guid: 12b06e1dbb835ff418fafa688feeb7ac, type: 3}
   whiteRookPrefab: {fileID: 4192706608116911244, guid: ee546e954254840489cc7c1ab8378909, type: 3}
   whiteKnightPrefab: {fileID: 6165982362926614726, guid: ddceb53863b947945b5b2d55acd29181, type: 3}
@@ -351,6 +337,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &846494426
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 846494428}
+  - component: {fileID: 846494427}
+  m_Layer: 0
+  m_Name: EventManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &846494427
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 846494426}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d4da77399a756c4293028a8dc35f496, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &846494428
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 846494426}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &934506149
 GameObject:
@@ -666,7 +696,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   legalMovePrefab: {fileID: 1076949981256920288, guid: f10d58c2eee5fee498d1770747475a21, type: 3}
-  selectedHighlightPrefab: {fileID: 0}
+  selectedHighlightPrefab: {fileID: 8591586196345364359, guid: a344a095dad1cbb488e84b5c6a4687d6, type: 3}
+  attackingPieceHighlightPrefab: {fileID: 2174941111173673969, guid: 113e98c7820cb1645a8280bed6c4c57f, type: 3}
 --- !u!1 &1747449043
 GameObject:
   m_ObjectHideFlags: 0

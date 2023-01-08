@@ -85,13 +85,69 @@ public class Game : MonoBehaviour
         {
             return;
         }
+        EventManager.instance.OnMoveOccured();
         Piece piece = gameLayout.state[fromPos.x, fromPos.y].piece;
         if (gameLayout.state[toPos.x, toPos.y].containsPiece)
         {
             Destroy(gameLayout.state[toPos.x, toPos.y].piece.gameObject);
         }
+        
+        // check edge case if castle move (only move where 2 pieces are moved)
+        if (piece.pieceType == PieceType.King && Vector3.Distance(fromPos, toPos) >= 2)
+        {
+            Vector3Int rookFromPos;
+            Vector3Int rookToPos;
+
+            // left castle
+            if ((fromPos - toPos).x > 0)
+            {
+                rookFromPos = new Vector3Int(0, fromPos.y, 0);
+                rookToPos = new Vector3Int(3, fromPos.y, 0);
+            }
+            //right castle
+            else
+            {
+                rookFromPos = new Vector3Int(7, fromPos.y, 0);
+                rookToPos = new Vector3Int(5, fromPos.y, 0);
+            }
+            gameLayout.state[rookFromPos.x, rookFromPos.y].piece.Move(rookToPos);
+            gameLayout.MovePiece(rookFromPos, rookToPos);
+        }
+
+        // en passant
+        if (piece.pieceType == PieceType.Pawn && fromPos.x != toPos.x && !gameLayout.state[toPos.x, toPos.y].containsPiece)
+        {
+            Destroy(gameLayout.state[toPos.x, fromPos.y].piece.gameObject);
+            gameLayout.state[toPos.x, fromPos.y].RemovePiece();
+        }
+
+        // pawn promotion
+        // TODO : dont auto promote to queen
+        if (piece.pieceType == PieceType.Pawn && (toPos.y == 7  || toPos.y == 0))
+        {
+            Destroy(piece.gameObject);
+            gameLayout.state[toPos.x, toPos.y].RemovePiece();
+            gameLayout.state[fromPos.x, fromPos.y].RemovePiece();
+            if (toPos.y == 7)
+            {
+                InitPiece(new Vector3Int(toPos.x, toPos.y), PlayerType.White, PieceType.Queen);
+                EndTurn();
+                return;
+            }
+            if (toPos.y == 0)
+            {
+                InitPiece(new Vector3Int(toPos.x, toPos.y), PlayerType.Black, PieceType.Queen);
+                EndTurn();
+                return;
+            }
+        }
         gameLayout.MovePiece(fromPos, toPos);
         piece.Move(toPos);
+        EndTurn();
+    }
+
+    public void EndTurn()
+    {
         if (playerMove == PlayerType.White)
         {
             playerMove = PlayerType.Black;
@@ -100,25 +156,49 @@ public class Game : MonoBehaviour
         {
             playerMove = PlayerType.White;
         }
-        IsInCheck();
+        DisplayCheck();
+        CheckEndGame();
     }
-
-    public void IsInCheck()
+    
+    public void DisplayCheck()
     {
         Destroy(isInCheck);
-        if (gameLayout.IsKingInCheck(playerMove)){
-            for (int x = 0; x < size; x++)
+        Vector3Int kingPosition = gameLayout.GetKingPosition(playerMove);
+        if (gameLayout.IsKingInCheck(playerMove, kingPosition))
+        {
+            isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
+            isInCheck.transform.position = kingPosition;
+        }
+    }
+
+    public bool CheckEndGame()
+    {
+        for (int x = 0; x < size; x++)
+        {
+            for (int y = 0; y < size; y++)
             {
-                for (int y = 0; y < size; y++)
+                if (gameLayout.state[x,y].containsPiece && gameLayout.state[x,y].piece.playerType == playerMove)
                 {
-                    if (gameLayout.state[x,y].containsPiece && gameLayout.state[x,y].piece.playerType == playerMove && gameLayout.state[x,y].piece.pieceType == PieceType.King)
+                    if (gameLayout.state[x,y].piece.GetLegalMoves(gameLayout).Count > 0)
                     {
-                        isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
-                        isInCheck.transform.position = new Vector3Int(x, y, 0);
+                        return false;
                     }
                 }
             }
         }
+        if (gameLayout.IsKingInCheck(playerMove, gameLayout.GetKingPosition(playerMove)))
+        {
+            print(playerMove.ToString() + " wins by checkmate!");
+            return true;
+        }
+        print("stalemate!");
+        return true;
+
+        // check if draw by insufficient material
+
+        // check if draw by move limit
+
+        // check if draw by 3-fold repitition
     }
 
     private void InitPiece(Vector3Int position, PlayerType playerType, PieceType pieceType)

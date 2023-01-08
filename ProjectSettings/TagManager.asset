@@ -45,6 +45,9 @@ TagManager:
   - name: Board
     uniqueID: 1272902003
     locked: 0
+  - name: InCheck
+    uniqueID: 3066294791
+    locked: 0
   - name: Pieces
     uniqueID: 4200674093
     locked: 0

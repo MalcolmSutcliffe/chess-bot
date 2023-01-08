@@ -4,11 +4,16 @@ using UnityEngine;
 
 public class Pawn : Piece
 {
-    public bool canEnPassantLeft;
-    public bool canEnPassantRight;
+    public bool enPassantable;
     public Pawn(Vector3Int position, PlayerType player, PieceType piece, GameObject gameObject) : base(position, player, piece, gameObject)
     {
-        
+        enPassantable = false;
+        EventManager.instance.MoveOccured += MoveOccured;
+    }
+
+    public void MoveOccured()
+    {
+        enPassantable = false;
     }
 
     public override List<Vector3Int> GetPossibleMoves(GameLayout gameLayout)
@@ -47,13 +52,22 @@ public class Pawn : Piece
             // en passant
             Vector3Int enPassantLeft = position + new Vector3Int(-1, 1, 0);
             Vector3Int enPassantRight = position + new Vector3Int(1, 1, 0);
-            if (this.canEnPassantLeft)
-            {
-                possibleMoves.Add(enPassantLeft);
+            if (gameLayout.IsInBoard(enPassantLeft))
+            {    if (gameLayout.state[position.x - 1, position.y].containsPiece && gameLayout.state[position.x - 1, position.y].piece.playerType != playerType && gameLayout.state[position.x - 1, position.y].piece.pieceType == PieceType.Pawn)
+                {
+                    Pawn pawnLeft = (Pawn) gameLayout.state[position.x - 1, position.y].piece;
+                    if (pawnLeft.enPassantable)
+                        possibleMoves.Add(enPassantLeft);
+                }
             }
-            if (this.canEnPassantRight)
+            if (gameLayout.IsInBoard(enPassantRight))
             {
-                possibleMoves.Add(enPassantRight);
+                if (gameLayout.state[position.x + 1, position.y].containsPiece && gameLayout.state[position.x + 1, position.y].piece.playerType != playerType && gameLayout.state[position.x + 1, position.y].piece.pieceType == PieceType.Pawn)
+                {
+                    Pawn pawnRight = (Pawn) gameLayout.state[position.x + 1, position.y].piece;
+                    if (pawnRight.enPassantable)
+                        possibleMoves.Add(enPassantRight);
+                }
             }
             return possibleMoves;
         }
@@ -90,17 +104,32 @@ public class Pawn : Piece
             // en passant
             Vector3Int enPassantLeft = position + new Vector3Int(-1, -1, 0);
             Vector3Int enPassantRight = position + new Vector3Int(1, -1, 0);
-            if (this.canEnPassantLeft)
-            {
-                possibleMoves.Add(enPassantLeft);
+            if (gameLayout.IsInBoard(enPassantLeft))
+            {    if (gameLayout.state[position.x - 1, position.y].containsPiece && gameLayout.state[position.x - 1, position.y].piece.playerType != playerType && gameLayout.state[position.x - 1, position.y].piece.pieceType == PieceType.Pawn)
+                {
+                    Pawn pawnLeft = (Pawn) gameLayout.state[position.x - 1, position.y].piece;
+                    if (pawnLeft.enPassantable)
+                        possibleMoves.Add(enPassantLeft);
+                }
             }
-            if (this.canEnPassantRight)
+            if (gameLayout.IsInBoard(enPassantRight))
             {
-                possibleMoves.Add(enPassantRight);
+                if (gameLayout.state[position.x + 1, position.y].containsPiece && gameLayout.state[position.x + 1, position.y].piece.playerType != playerType && gameLayout.state[position.x + 1, position.y].piece.pieceType == PieceType.Pawn)
+                {
+                    Pawn pawnRight = (Pawn) gameLayout.state[position.x + 1, position.y].piece;
+                    if (pawnRight.enPassantable)
+                        possibleMoves.Add(enPassantRight);
+                }
             }
             return possibleMoves;
         }
         return possibleMoves;
+    }
+
+    public override void Move(Vector3Int position){
+        if (Vector3.Distance(this.position, position) >= 2)
+            enPassantable = true;
+        base.Move(position);
     }
 
 }
