@@ -1,25 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class Knight : Piece
 {
-    public static List<Vector3Int> KNIGHT_MOVE_DIRECTIONS = new List<Vector3Int>{new Vector3Int(1, 2, 0), new Vector3Int(1, -2, 0), new Vector3Int(-1, 2, 0), new Vector3Int(-1, -2, 0), new Vector3Int(2, 1, 0), new Vector3Int(2, -1, 0), new Vector3Int(-2, 1, 0), new Vector3Int(-2, -1, 0)};
-    public Knight(Vector3Int position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
+    public static List<int[]> KNIGHT_MOVE_DIRECTIONS = new List<int[]>{new int[] {1, 2}, new int[] {1, -2}, new int[] {-1, 2}, new int[] {-1, -2}, 
+                                                                        new int[] {2, 1}, new int[] {2, -1}, new int[] {-2, 1}, new int[] {-2, -1}};
+    public Knight(int[] position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
     {
         
     }
 
-    public override List<Vector3Int> GetPossibleMoves(GameLayout gameLayout)
+    public override List<int[]> GetPossibleMoves(GameLayout gameLayout)
     {
-        List<Vector3Int> possibleMoves = new List<Vector3Int>();
+        List<int[]> possibleMoves = new List<int[]>();
         foreach (var dir in KNIGHT_MOVE_DIRECTIONS)
         {
-            Vector3Int move = position + dir;
+            int[] move = new int[] {position[0] + dir[0], position[1] + dir[1]};
             if (!gameLayout.IsInBoard(move)){
                 continue;
             }
-            if (gameLayout.state[move.x, move.y].containsPiece && gameLayout.state[move.x, move.y].piece.playerType == this.playerType)
+            if (gameLayout.state[move[0], move[1]].containsPiece && gameLayout.state[move[0], move[1]].piece.playerType == this.playerType)
             {
                 continue;
             }
@@ -29,7 +29,7 @@ public class Knight : Piece
     }
 
     public override Piece Copy(){
-        return new Knight(position, playerType, pieceType);
+        return new Knight(new int[] {position[0], position[1]} , playerType, pieceType);
     }
 
 }

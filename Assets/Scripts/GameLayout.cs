@@ -1,11 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class GameLayout{
     public Cell[,] state {get; private set;}
     public int size {get; private set;}
-    public Vector3Int[] previousMove {get; private set;} 
+    public int[][] previousMove {get; private set;} 
     public GameLayout(int size) 
     {
         this.size = size;
@@ -20,73 +20,73 @@ public class GameLayout{
         }
     }
 
-    public void AddPiece(Vector3Int position, Piece piece)
+    public void AddPiece(int[] position, Piece piece)
     {
-        this.state[position.x, position.y].SetPiece(piece);
+        this.state[position[0], position[1]].SetPiece(piece);
     }
 
-    public void MovePiece(Vector3Int fromPos, Vector3Int toPos)
+    public void MovePiece(int[] fromPos, int[] toPos)
     {
 
         // check that position has a piece
-        if (!this.state[fromPos.x, fromPos.y].containsPiece)
+        if (!this.state[fromPos[0], fromPos[1]].containsPiece)
         {
             return;
         }
 
-        Piece piece = this.state[fromPos.x, fromPos.y].piece;
+        Piece piece = this.state[fromPos[0], fromPos[1]].piece;
 
         // EDGE CASE: castle move (only move where 2 pieces are moved)
-        if (this.state[fromPos.x, fromPos.y].piece.pieceType == PieceType.King && Vector3.Distance(fromPos, toPos) >= 2)
+        if (this.state[fromPos[0], fromPos[1]].piece.pieceType == PieceType.King && Math.Abs(fromPos[0] - toPos[0]) >= 2)
         {
-            Vector3Int rookFromPos;
-            Vector3Int rookToPos;
+            int[] rookFromPos;
+            int[] rookToPos;
 
             // left castle
-            if ((fromPos - toPos).x > 0)
+            if ((fromPos[0] - toPos[0]) > 0)
             {
-                rookFromPos = new Vector3Int(0, fromPos.y, 0);
-                rookToPos = new Vector3Int(3, fromPos.y, 0);
+                rookFromPos = new int[] {0, fromPos[1]};
+                rookToPos = new int[]{ 3, fromPos[1]};
             }
             //right castle
             else
             {
-                rookFromPos = new Vector3Int(7, fromPos.y, 0);
-                rookToPos = new Vector3Int(5, fromPos.y, 0);
+                rookFromPos = new int[] {7, fromPos[1]} ;
+                rookToPos = new int[] {5, fromPos[1]};
             }
 
-            Piece rookPiece = this.state[rookFromPos.x, rookFromPos.y].piece;
+            Piece rookPiece = this.state[rookFromPos[0], rookFromPos[1]].piece;
             
             rookPiece.Move(rookToPos);
-            this.state[rookFromPos.x, rookFromPos.y].RemovePiece();
-            this.state[rookToPos.x, rookToPos.y].SetPiece(rookPiece);
+            this.state[rookFromPos[0], rookFromPos[1]].RemovePiece();
+            this.state[rookToPos[0], rookToPos[1]].SetPiece(rookPiece);
         }
 
         // EDGE CASE: en passant
-        if (this.state[fromPos.x, fromPos.y].piece.pieceType == PieceType.Pawn && fromPos.x != toPos.x && !this.state[toPos.x, toPos.y].containsPiece)
+        if (this.state[fromPos[0], fromPos[1]].piece.pieceType == PieceType.Pawn && fromPos[0] != toPos[0] && !this.state[toPos[0], toPos[1]].containsPiece)
         {
-            state[toPos.x, fromPos.y].RemovePiece();
+            state[toPos[0], fromPos[1]].RemovePiece();
         }
 
         // if position moving to has piece, remove it
-        if (this.state[toPos.x, toPos.y].containsPiece)
+        if (this.state[toPos[0], toPos[1]].containsPiece)
         {
-            this.state[toPos.x, toPos.y].RemovePiece();
+            this.state[toPos[0], toPos[1]].RemovePiece();
         }
         
         // move piece
         piece.Move(toPos);
-        this.state[fromPos.x, fromPos.y].RemovePiece();
-        this.state[toPos.x, toPos.y].SetPiece(piece);
+        this.state[fromPos[0], fromPos[1]].RemovePiece();
+        this.state[toPos[0], toPos[1]].SetPiece(piece);
 
-        this.previousMove = new Vector3Int[]{fromPos, toPos};
+        this.previousMove = new int[][]{fromPos, toPos};
     }
 
-    public bool IsInBoard(Vector3Int position){
-        return position.x >= 0 && position.x < size && position.y >= 0 && position.y < size;
+    public bool IsInBoard(int[] position){
+        return position[0] >= 0 && position[0] < size && position[1] >= 0 && position[1] < size;
     }
 
-    public Vector3Int GetKingPosition(PlayerType playerType)
+    public int[] GetKingPosition(PlayerType playerType)
     {
         for (int x = 0; x < size; x++)
         {
@@ -94,16 +94,17 @@ public class GameLayout{
             {
                 if (state[x,y].containsPiece && state[x,y].piece.playerType == playerType && state[x,y].piece.pieceType == PieceType.King)
                 {
-                    return new Vector3Int(x, y, 0);
+                    return new int[] {x, y};
                 }
             }
         }
-        return new Vector3Int(0, 0, 0);
+        return new int[] {0, 0};
     }
 
-    public bool IsKingInCheck(PlayerType playerType, Vector3Int kingPosition)
+    public bool IsKingInCheck(PlayerType playerType, int[] kingPosition)
     {
         List<Piece> piecesToCheck = new List<Piece>();
+        
         for (int x = 0; x < size; x++)
         {
             for (int y = 0; y < size; y++)
@@ -117,8 +118,13 @@ public class GameLayout{
         
         foreach (var piece in piecesToCheck)
         {
-            if (piece.GetPossibleMoves(this).Contains(kingPosition))
-                return true;
+            foreach (var possibleMove in piece.GetPossibleMoves(this))
+            {
+                if (possibleMove[0] == kingPosition[0] && possibleMove[1] == kingPosition[1])
+                    {
+                        return true;
+                    }
+                }
         }
         return false;
     }

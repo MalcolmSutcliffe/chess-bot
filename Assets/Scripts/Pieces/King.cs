@@ -1,41 +1,44 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class King : Piece
 {
     public bool castlingRights;
-    public static List<Vector3Int> KING_MOVE_DIRECTIONS = new List<Vector3Int>{new Vector3Int(-1, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0), new Vector3Int(-1, -1, 0), new Vector3Int(-1, 1, 0), new Vector3Int(1, -1, 0), new Vector3Int(1, 1, 0)};
-    public King(Vector3Int position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
+    public static List<int[]> KING_MOVE_DIRECTIONS = new List<int[]>{new int[] {-1, 0}, new int[] {1, 0}, new int[] {0, 1}, new int[] {0, -1}, 
+                                                                        new int[] {-1, -1}, new int[] {-1, 1}, new int[] {1, -1}, new int[] {1, 1}};
+    public King(int[] position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
     {
         castlingRights = true;
     }
 
-    public override List<Vector3Int> GetPossibleMoves(GameLayout gameLayout)
+    public override List<int[]> GetPossibleMoves(GameLayout gameLayout)
     {
-        List<Vector3Int> possibleMoves = new List<Vector3Int>();
+        List<int[]> possibleMoves = new List<int[]>();
         // basic directions
-        foreach(var dir in KING_MOVE_DIRECTIONS)
+        foreach(var direction in KING_MOVE_DIRECTIONS)
         {
-            Vector3Int move = position + dir;
+            int[] move = new int[] {position[0] + direction[0], position[1] + direction[1]};
+            
             if (!gameLayout.IsInBoard(move))
             {
                 continue;
             }
-            if (gameLayout.state[move.x, move.y].containsPiece && gameLayout.state[move.x, move.y].piece.playerType == this.playerType)
+            
+            if (gameLayout.state[move[0], move[1]].containsPiece && gameLayout.state[move[0], move[1]].piece.playerType == this.playerType)
             {
                 continue;
             }
+            
             possibleMoves.Add(move);
         }
 
         return possibleMoves;
     }
-    public override List<Vector3Int> GetLegalMoves(GameLayout gameLayout)
+    public override List<int[]> GetLegalMoves(GameLayout gameLayout)
     {
-        List<Vector3Int> possibleMoves = GetPossibleMoves(gameLayout);
+        List<int[]> possibleMoves = GetPossibleMoves(gameLayout);
         possibleMoves.AddRange(GetCastlingMoves(gameLayout));
-        List<Vector3Int> legalMoves = new List<Vector3Int>();
+        List<int[]> legalMoves = new List<int[]>();
         
         foreach (var move in possibleMoves)
         {
@@ -52,13 +55,15 @@ public class King : Piece
         
     }
 
-    public List<Vector3Int> GetCastlingMoves(GameLayout gameLayout)
+    public List<int[]> GetCastlingMoves(GameLayout gameLayout)
     {
-        List<Vector3Int> possibleMoves = new List<Vector3Int>();
+        List<int[]> possibleMoves = new List<int[]>();
+        
         if (!castlingRights)
         {
             return possibleMoves;
         }
+
         if (gameLayout.IsKingInCheck(this.playerType, this.position))
         {
             return possibleMoves;
@@ -67,13 +72,13 @@ public class King : Piece
         // left castling
         if (CheckLeftCastle(gameLayout))
         {
-            possibleMoves.Add(position + new Vector3Int(-2, 0, 0));
+            possibleMoves.Add(new int[]{position[0] - 2, 0});
         }
 
-        // left castling
+        // right castling
         if (CheckRightCastle(gameLayout))
         {
-            possibleMoves.Add(position + new Vector3Int(2, 0, 0));
+            possibleMoves.Add(new int[]{position[0] + 2, 0});
         }
 
         return possibleMoves;
@@ -82,22 +87,22 @@ public class King : Piece
 
     public bool CheckLeftCastle(GameLayout gameLayout)
     {
-        if (!gameLayout.state[position.x -4, position.y].containsPiece)
+        if (!gameLayout.state[position[0] -4, position[1]].containsPiece)
         {
             return false;
         }
 
-        if (!(gameLayout.state[position.x -4, position.y].piece.playerType == this.playerType))
+        if (!(gameLayout.state[position[0] -4, position[1]].piece.playerType == this.playerType))
         {
             return false;
         }
         
-        if (!(gameLayout.state[position.x -4, position.y].piece.pieceType == PieceType.Rook))
+        if (!(gameLayout.state[position[0] -4, position[1]].piece.pieceType == PieceType.Rook))
         {
             return false;
         }
 
-        Rook leftRook = (Rook) gameLayout.state[position.x -4, position.y].piece;
+        Rook leftRook = (Rook) gameLayout.state[position[0] -4, position[1]].piece;
         
         if (!leftRook.castlingRights)
         {
@@ -107,7 +112,7 @@ public class King : Piece
         // check empty squares
         for (int i = 1; i < 4; i++)
         {
-            if (gameLayout.state[position.x-i, position.y].containsPiece)
+            if (gameLayout.state[position[0]-i, position[1]].containsPiece)
             {
                 return false;
             }
@@ -116,7 +121,7 @@ public class King : Piece
         // check no checks
         for (int i = 1; i < 3; i++)
         {
-            if (gameLayout.IsKingInCheck(this.playerType, position + new Vector3Int(-i, 0, 0)))
+            if (gameLayout.IsKingInCheck(this.playerType, new int[] {position[0]-i, 0}))
             {
                 return false;
             }
@@ -127,22 +132,22 @@ public class King : Piece
 
     public bool CheckRightCastle(GameLayout gameLayout)
     {
-        if (!gameLayout.state[position.x +3, position.y].containsPiece)
+        if (!gameLayout.state[position[0] +3, position[1]].containsPiece)
         {
             return false;
         }
 
-        if (!(gameLayout.state[position.x +3, position.y].piece.playerType == this.playerType))
+        if (!(gameLayout.state[position[0] +3, position[1]].piece.playerType == this.playerType))
         {
             return false;
         }
         
-        if (!(gameLayout.state[position.x +3, position.y].piece.pieceType == PieceType.Rook))
+        if (!(gameLayout.state[position[0] +3, position[1]].piece.pieceType == PieceType.Rook))
         {
             return false;
         }
 
-        Rook leftRook = (Rook) gameLayout.state[position.x +3, position.y].piece;
+        Rook leftRook = (Rook) gameLayout.state[position[0] +3, position[1]].piece;
         
         if (!leftRook.castlingRights)
         {
@@ -152,7 +157,7 @@ public class King : Piece
         // check empty squares
         for (int i = 1; i < 3; i++)
         {
-            if (gameLayout.state[position.x + i, position.y].containsPiece)
+            if (gameLayout.state[position[0] + i, position[1]].containsPiece)
             {
                 return false;
             }
@@ -161,7 +166,7 @@ public class King : Piece
         // check no checks
         for (int i = 1; i < 2; i++)
         {
-            if (gameLayout.IsKingInCheck(this.playerType, position+new Vector3Int(i, 0, 0)))
+            if (gameLayout.IsKingInCheck(this.playerType, new int[] {position[0] + i, 0}))
             {
                 return false;
             }
@@ -170,13 +175,13 @@ public class King : Piece
         return true;
     }
 
-    public override void Move(Vector3Int position){
+    public override void Move(int[] position){
         castlingRights = false;
         base.Move(position);
     }
 
     public override Piece Copy(){
-        return new King(position, playerType, pieceType);
+        return new King(new int[] {position[0], position[1]} , playerType, pieceType);
     }
 
 }

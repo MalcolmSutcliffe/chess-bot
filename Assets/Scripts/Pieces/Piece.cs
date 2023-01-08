@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public enum PieceType {
     Pawn,
@@ -13,20 +12,19 @@ public enum PieceType {
 
 public abstract class Piece
 {
-    public Vector3Int position {get; protected set;}
+    public int[] position {get; protected set;}
     public PlayerType playerType {get; protected set;}
     public PieceType pieceType {get; protected set;}
-    public GameObject gameObject;
 
-    public Piece(Vector3Int position, PlayerType playerType, PieceType pieceType){
+    public Piece(int[] position, PlayerType playerType, PieceType pieceType){
         this.position = position;
         this.playerType = playerType;
         this.pieceType = pieceType;
     }
-    public virtual List<Vector3Int> GetLegalMoves(GameLayout gameLayout){
+    public virtual List<int[]> GetLegalMoves(GameLayout gameLayout){
         
-        List<Vector3Int> possibleMoves = GetPossibleMoves(gameLayout);
-        List<Vector3Int> legalMoves = new List<Vector3Int>();
+        List<int[]> possibleMoves = GetPossibleMoves(gameLayout);
+        List<int[]> legalMoves = new List<int[]>();
         
         foreach (var move in possibleMoves)
         {
@@ -42,9 +40,9 @@ public abstract class Piece
         return legalMoves;
     }
 
-    public abstract List<Vector3Int> GetPossibleMoves(GameLayout gameLayout);
+    public abstract List<int[]> GetPossibleMoves(GameLayout gameLayout);
 
-    public virtual void Move(Vector3Int position){
+    public virtual void Move(int[] position){
         this.position = position;
     }
 
