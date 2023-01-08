@@ -19,7 +19,10 @@ public class Game : MonoBehaviour
     public PlayerType playerMove;
 
     public GameObject isInCheckPrefab;
-    public GameObject isInCheck;
+    private GameObject isInCheck;
+    
+    public GameObject previousMoveHighlightPrefab;
+    private GameObject[] previousMoveHighlights;
 
     private void Awake()
     {
@@ -35,6 +38,7 @@ public class Game : MonoBehaviour
     {
         Camera.main.transform.position = new Vector3(size / 2f, size/ 2f, -10);
         EventManager.instance.MoveOccured += Move;
+        previousMoveHighlights = new GameObject[2];
         board.DrawGrid(size);
         gameLayout = new GameLayout(size);
         
@@ -84,25 +88,6 @@ public class Game : MonoBehaviour
         gameLayout.MovePiece(fromPos, toPos);
         EndTurn();
         DrawBoard();
-        
-    }
-
-    public void DrawBoard()
-    {
-        pieceManager.ClearBoard();
-        
-        for (int x = 0; x < size; x++)
-        {
-            for (int y = 0; y < size; y++)
-            {
-                if (gameLayout.state[x,y].containsPiece)
-                {
-                    pieceManager.DrawPiece(gameLayout.state[x,y].piece, new Vector3Int(x, y, 0));
-                }
-            }
-        }
-        
-        DisplayCheck();
     }
 
     public void EndTurn()
@@ -116,17 +101,6 @@ public class Game : MonoBehaviour
             playerMove = PlayerType.White;
         }
         CheckEndGame();
-    }
-    
-    public void DisplayCheck()
-    {
-        Destroy(isInCheck);
-        Vector3Int kingPosition = gameLayout.GetKingPosition(playerMove);
-        if (gameLayout.IsKingInCheck(playerMove, kingPosition))
-        {
-            isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
-            isInCheck.transform.position = kingPosition;
-        }
     }
 
     public bool CheckEndGame()
@@ -160,6 +134,49 @@ public class Game : MonoBehaviour
         // check if draw by move limit
 
         // check if draw by 3-fold repitition
+    }
+
+    public void DrawBoard()
+    {
+        pieceManager.ClearBoard();
+        
+        for (int x = 0; x < size; x++)
+        {
+            for (int y = 0; y < size; y++)
+            {
+                if (gameLayout.state[x,y].containsPiece)
+                {
+                    pieceManager.DrawPiece(gameLayout.state[x,y].piece, new Vector3Int(x, y, 0));
+                }
+            }
+        }
+        DrawPreviousMove();
+        DisplayCheck();
+    }
+
+    public void DrawPreviousMove()
+    {
+        if (gameLayout.previousMove==null)
+        {
+            return;
+        }
+        Destroy(previousMoveHighlights[0]);
+        Destroy(previousMoveHighlights[1]);
+        previousMoveHighlights[0] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
+        previousMoveHighlights[1] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
+        previousMoveHighlights[0].transform.position = gameLayout.previousMove[0];
+        previousMoveHighlights[1].transform.position = gameLayout.previousMove[1];
+    }
+    
+    public void DisplayCheck()
+    {
+        Destroy(isInCheck);
+        Vector3Int kingPosition = gameLayout.GetKingPosition(playerMove);
+        if (gameLayout.IsKingInCheck(playerMove, kingPosition))
+        {
+            isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
+            isInCheck.transform.position = kingPosition;
+        }
     }
 
     private void InitPiece(Vector3Int position, PlayerType playerType, PieceType pieceType)

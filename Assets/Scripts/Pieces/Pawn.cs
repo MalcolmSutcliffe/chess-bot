@@ -4,143 +4,138 @@ using UnityEngine;
 
 public class Pawn : Piece
 {
+    private int travelDirection;
+    private int startingYPosition;
     public Pawn(Vector3Int position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType)
     {
+        if (playerType == PlayerType.White)
+        {
+            travelDirection = 1;
+            startingYPosition = 1;
+        }
+        else if (playerType == PlayerType.Black)
+        {
+            travelDirection = -1;
+            startingYPosition = 6;
+        }
     }
 
     public override List<Vector3Int> GetPossibleMoves(GameLayout gameLayout)
     {
         List<Vector3Int> possibleMoves = new List<Vector3Int>();
 
-        // logic for white pawn
-        if (this.playerType == PlayerType.White)
+        Vector3Int moveForward1 = position + new Vector3Int(0, travelDirection, 0);
+
+        if (!gameLayout.IsInBoard(moveForward1))
         {
-            // move forward (dont need to worry about out of board as it will be a new piece by then)
-            Vector3Int moveForward1 = position + new Vector3Int(0, 1, 0);
-            if (!gameLayout.state[moveForward1.x, moveForward1.y].containsPiece)
-            {
-                possibleMoves.Add(moveForward1);
-            }
-
-            // move forward 2
-            Vector3Int moveForward2 = position + new Vector3Int(0, 2, 0);
-            if (this.position.y == 1 && !gameLayout.state[moveForward2.x, moveForward2.y].containsPiece)
-            {
-                possibleMoves.Add(moveForward2);
-            }
-
-            // capture
-            Vector3Int captureLeft = position + new Vector3Int(-1, 1, 0);
-            Vector3Int captureRight = position + new Vector3Int(1, 1, 0);
-            if (gameLayout.IsInBoard(captureLeft) && gameLayout.state[captureLeft.x, captureLeft.y].containsPiece && gameLayout.state[captureLeft.x, captureLeft.y].piece.playerType != this.playerType)
-            {
-                possibleMoves.Add(captureLeft);
-            }
-            if (gameLayout.IsInBoard(captureRight) && gameLayout.state[captureRight.x, captureRight.y].containsPiece && gameLayout.state[captureRight.x, captureRight.y].piece.playerType != this.playerType)
-            {
-                possibleMoves.Add(captureRight);
-            }
-            
-            // en passant
-            Vector3Int enPassantLeft = position + new Vector3Int(-1, 1, 0);
-            Vector3Int enPassantRight = position + new Vector3Int(1, 1, 0);
-            if (gameLayout.IsInBoard(enPassantLeft))
-            {    if (gameLayout.state[position.x - 1, position.y].containsPiece && gameLayout.state[position.x - 1, position.y].piece.playerType != playerType && gameLayout.state[position.x - 1, position.y].piece.pieceType == PieceType.Pawn)
-                {
-                    Pawn pawnLeft = (Pawn) gameLayout.state[position.x - 1, position.y].piece;
-                    if (pawnLeft.enPassantable(gameLayout))
-                        possibleMoves.Add(enPassantLeft);
-                }
-            }
-            if (gameLayout.IsInBoard(enPassantRight))
-            {
-                if (gameLayout.state[position.x + 1, position.y].containsPiece && gameLayout.state[position.x + 1, position.y].piece.playerType != playerType && gameLayout.state[position.x + 1, position.y].piece.pieceType == PieceType.Pawn)
-                {
-                    Pawn pawnRight = (Pawn) gameLayout.state[position.x + 1, position.y].piece;
-                    if (pawnRight.enPassantable(gameLayout))
-                        possibleMoves.Add(enPassantRight);
-                }
-            }
             return possibleMoves;
+        }
+
+        // move forward 1
+        if (!gameLayout.state[moveForward1.x, moveForward1.y].containsPiece)
+        {
+            possibleMoves.Add(moveForward1);
+        }
+
+        // move forward 2
+        Vector3Int moveForward2 = position + new Vector3Int(0, 2*travelDirection, 0);
+        
+        if (this.position.y == startingYPosition && !gameLayout.state[moveForward2.x, moveForward2.y].containsPiece)
+        {
+            possibleMoves.Add(moveForward2);
+        }
+
+        // capture
+        Vector3Int captureLeft = position + new Vector3Int(-1, travelDirection, 0);
+        Vector3Int captureRight = position + new Vector3Int(1, travelDirection, 0);
+        
+        if (CheckCapture(gameLayout, -1))
+        {
+            possibleMoves.Add(captureLeft);
+        }
+        if (CheckCapture(gameLayout, 1))
+        {
+            possibleMoves.Add(captureRight);
         }
         
-        // logic for black pawn
-        if (this.playerType == PlayerType.Black)
+        // en passant
+        Vector3Int enPassantLeft = position + new Vector3Int(-1, travelDirection, 0);
+        Vector3Int enPassantRight = position + new Vector3Int(1, travelDirection, 0);
+        
+        if (CheckEnPasant(gameLayout, -1))
         {
-            // move forward (dont need to worry about out of board as it will be a new piece by then)
-            Vector3Int moveForward1 = position + new Vector3Int(0, -1, 0);
-            if (!gameLayout.state[moveForward1.x, moveForward1.y].containsPiece)
-            {
-                possibleMoves.Add(moveForward1);
-            }
-
-            // move forward 2
-            Vector3Int moveForward2 = position + new Vector3Int(0, -2, 0);
-            if (this.position.y == 6 && !gameLayout.state[moveForward2.x, moveForward2.y].containsPiece)
-            {
-                possibleMoves.Add(moveForward2);
-            }
-
-            // capture
-            Vector3Int captureLeft = position + new Vector3Int(-1, -1, 0);
-            Vector3Int captureRight = position + new Vector3Int(1, -1, 0);
-            if (gameLayout.IsInBoard(captureLeft) && gameLayout.state[captureLeft.x, captureLeft.y].containsPiece && gameLayout.state[captureLeft.x, captureLeft.y].piece.playerType != this.playerType)
-            {
-                possibleMoves.Add(captureLeft);
-            }
-            if (gameLayout.IsInBoard(captureRight) && gameLayout.state[captureRight.x, captureRight.y].containsPiece && gameLayout.state[captureRight.x, captureRight.y].piece.playerType != this.playerType)
-            {
-                possibleMoves.Add(captureRight);
-            }
-            
-            // en passant
-            Vector3Int enPassantLeft = position + new Vector3Int(-1, -1, 0);
-            Vector3Int enPassantRight = position + new Vector3Int(1, -1, 0);
-            if (gameLayout.IsInBoard(enPassantLeft))
-            {    if (gameLayout.state[position.x - 1, position.y].containsPiece && gameLayout.state[position.x - 1, position.y].piece.playerType != playerType && gameLayout.state[position.x - 1, position.y].piece.pieceType == PieceType.Pawn)
-                {
-                    Pawn pawnLeft = (Pawn) gameLayout.state[position.x - 1, position.y].piece;
-                    if (pawnLeft.enPassantable(gameLayout))
-                        possibleMoves.Add(enPassantLeft);
-                }
-            }
-            if (gameLayout.IsInBoard(enPassantRight))
-            {
-                if (gameLayout.state[position.x + 1, position.y].containsPiece && gameLayout.state[position.x + 1, position.y].piece.playerType != playerType && gameLayout.state[position.x + 1, position.y].piece.pieceType == PieceType.Pawn)
-                {
-                    Pawn pawnRight = (Pawn) gameLayout.state[position.x + 1, position.y].piece;
-                    if (pawnRight.enPassantable(gameLayout))
-                        possibleMoves.Add(enPassantRight);
-                }
-            }
-            return possibleMoves;
+            possibleMoves.Add(enPassantLeft);
         }
+
+        if (CheckEnPasant(gameLayout, 1))
+        {
+            possibleMoves.Add(enPassantRight);
+        }
+
         return possibleMoves;
     }
 
+    public bool CheckCapture(GameLayout gameLayout, int direction)
+    {
+        if (!gameLayout.IsInBoard(position + new Vector3Int(direction, 0, 0))){
+            return false;
+        }
+        if (!gameLayout.state[position.x + direction, position.y + travelDirection].containsPiece)
+        {
+            return false;
+        } 
+        if (gameLayout.state[position.x + direction, position.y + travelDirection].piece.playerType == this.playerType)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool CheckEnPasant(GameLayout gameLayout, int direction)
+    {
+        if (!gameLayout.IsInBoard(position + new Vector3Int(direction, 0, 0))){
+            return false;
+        }
+        if (!gameLayout.state[position.x + direction, position.y].containsPiece)
+        {
+            return false;
+        } 
+        if (gameLayout.state[position.x + direction, position.y].piece.playerType == playerType)
+        {
+            return false;
+        }
+        if (gameLayout.state[position.x + direction, position.y].piece.pieceType != PieceType.Pawn)
+        {
+            return false;
+        }
+        Pawn pawnAdj = (Pawn) gameLayout.state[position.x + direction, position.y].piece;
+        if (!pawnAdj.enPassantable(gameLayout))
+        {
+            return false;
+        }
+        
+        return true;
+    }
+
+    // method to check if this pawn is enPassantable
     public bool enPassantable(GameLayout gameLayout)
     {
         if (gameLayout.previousMove == null)
         {
             return false;
         }
-        if (playerType == PlayerType.White)
-        {
-            if (position.y != 3){
-                return false;
-            }
-            // if previous move was moving this pawn forward
-            return (gameLayout.previousMove == new Vector3Int[]{new Vector3Int(position.x, 1, 0), new Vector3Int(position.x, 3, 0)});
+        
+        if (position.y != startingYPosition + 2*travelDirection){
+            return false;
         }
-        if (playerType == PlayerType.Black)
+
+        if (gameLayout.previousMove[1] != position)
         {
-            if (position.y != 6){
-                return false;
-            }
-            // if previous move was moving this pawn forward
-            return (gameLayout.previousMove == new Vector3Int[]{new Vector3Int(position.x, 6, 0), new Vector3Int(position.x, 4, 0)});
+            return false;
         }
-        return false;
+
+        return true;
     }
 
     public override Piece Copy(){

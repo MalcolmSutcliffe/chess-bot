@@ -10,7 +10,6 @@ public class GameLayout{
     {
         this.size = size;
         this.state = new Cell[size,size];
-        this.previousMove = new Vector3Int[2];
         
         for (int x = 0; x < size; x++)
         {
