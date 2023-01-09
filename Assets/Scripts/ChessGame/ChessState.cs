@@ -7,6 +7,8 @@ public class ChessState{
     public ChessSquare[,] boardState {get; private set;}
     public int size {get; private set;}
     public int[][] previousMove {get; private set;}
+    public int halfClock; // time since last capture or pawn move used for draws
+    public Dictionary<string, int> stateHistory;
     
     public Player playerWhite;
     public Player playerBlack;
@@ -22,6 +24,8 @@ public class ChessState{
         this.playerBlack = new Player(PlayerType.Black);
 
         this.activePlayer = this.playerWhite;
+
+        this.halfClock = 0;
         
         for (int x = 0; x < size; x++)
         {
@@ -46,6 +50,13 @@ public class ChessState{
         }
 
         Piece piece = this.boardState[fromPos[0], fromPos[1]].piece;
+
+        halfClock++;
+
+        if (move.capturePiece || piece.pieceType == PieceType.Pawn)
+        {
+            halfClock = 0;
+        }
 
         // EDGE CASE: castle move (only move where 2 pieces are moved)
         if (this.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.King && Math.Abs(fromPos[0] - toPos[0]) >= 2)
@@ -175,15 +186,26 @@ public class ChessState{
 
 
     // returns:
-    //  0 if game is not over
-    //  1 if white wins
-    //  2 if black wins
-    //  3 if draw by stalemate
+    // 0 if game is not over
+    // 1 if white wins
+    // 2 if black wins
+    // 3 if draw by stalemate
+    // 4 if draw by insufficient material
+    // 5 if draw by move limit
+    // 6 if draw by 3-fold repitition
     public int CheckEndGame()
     {
         // check draw by insufficient material
+        if (!CheckSufficientMaterial())
+        {
+            return 4;
+        }
 
         // check draw by move limit
+        if (halfClock >= 100)
+        {
+            return 5;
+        }
 
         // check draw by 3-fold repitition
 
@@ -203,6 +225,29 @@ public class ChessState{
                 return 2;
         }
         return 3;
+    }
+
+    public bool CheckSufficientMaterial()
+    {
+        if (playerWhite.pieces.Count >= 3 || playerBlack.pieces.Count >= 3)
+        {
+            return true;
+        }
+        foreach(var piece in playerWhite.pieces)
+        {
+            if (piece.pieceType == PieceType.Pawn || piece.pieceType == PieceType.Rook || piece.pieceType == PieceType.Queen)
+            {
+                return true;
+            }
+        }
+        foreach(var piece in playerBlack.pieces)
+        {
+            if (piece.pieceType == PieceType.Pawn || piece.pieceType == PieceType.Rook || piece.pieceType == PieceType.Queen)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public string EncodeMoveSAN(Move move)
@@ -392,6 +437,11 @@ public class ChessState{
             
         }
         return new Move(pieceType, fromPos, toPos, capturePiece, promotePiece, promotedTo);
+    }
+
+    public static string EncodeBoardState()
+    {
+        return "";
     }
 
 

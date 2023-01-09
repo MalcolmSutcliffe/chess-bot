@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
+    bool isGameActive;
+    
     public Board board;
     public ChessState chessState;
     public int size = 8;
@@ -35,10 +37,13 @@ public class Game : MonoBehaviour
 
     void Update()
     {
-        moveSelector.CheckUserInput(chessState, chessState.activePlayer.playerType);
+        if (isGameActive)
+            moveSelector.CheckUserInput(chessState, chessState.activePlayer.playerType);
     }
 
     private void InitializeGame(){
+        isGameActive = true;
+
         // set board to default value
         chessState.AddPiece(new int[] {0, 0}, PlayerType.White, PieceType.Rook);
         chessState.AddPiece(new int[] {7, 0}, PlayerType.White, PieceType.Rook);
@@ -79,12 +84,23 @@ public class Game : MonoBehaviour
                 break;
             case 1:
                 print("white wins by checkmate!");
+                isGameActive = false;
                 break;
             case 2:
                 print("black wins by checkmate!");
+                isGameActive = false;
                 break;
             case 3:
                 print("draw by stalemate!");
+                isGameActive = false;
+                break;
+            case 4:
+                print("draw by insufficeint material");
+                isGameActive = false;
+                break;
+            case 5:
+                print("draw by move limit");
+                isGameActive = false;
                 break;
         }
     }
