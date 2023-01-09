@@ -10,20 +10,20 @@ public class Knight : Piece
         
     }
 
-    public override List<int[]> GetPossibleMoves(GameLayout gameLayout)
+    public override List<Move> GetPossibleMoves(ChessState chessState)
     {
-        List<int[]> possibleMoves = new List<int[]>();
+        List<Move> possibleMoves = new List<Move>();
         foreach (var dir in KNIGHT_MOVE_DIRECTIONS)
         {
             int[] move = new int[] {position[0] + dir[0], position[1] + dir[1]};
-            if (!gameLayout.IsInBoard(move)){
+            if (!chessState.IsInBoard(move)){
                 continue;
             }
-            if (gameLayout.state[move[0], move[1]].containsPiece && gameLayout.state[move[0], move[1]].piece.playerType == this.playerType)
+            if (chessState.boardState[move[0], move[1]].containsPiece && chessState.boardState[move[0], move[1]].piece.playerType == this.playerType)
             {
                 continue;
             }
-            possibleMoves.Add(move);
+            possibleMoves.Add(new Move(pieceType, position, move, chessState.boardState[move[0], move[1]].containsPiece, false, pieceType));
         }
         return possibleMoves;
     }

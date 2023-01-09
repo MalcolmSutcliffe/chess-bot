@@ -2,35 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum PlayerType{
-    White,
-    Black
-}
-
 public class Game : MonoBehaviour
 {
-    public static Game instance {get; private set;}
     public Board board;
-    public GameLayout gameLayout;
+    public ChessState chessState;
     public int size = 8;
-    private UserInterface userInterface;
     private PieceManager pieceManager;
-
-    public PlayerType playerMove;
+    private MoveSelector moveSelector;
 
     public GameObject isInCheckPrefab;
     private GameObject isInCheck;
     
     public GameObject previousMoveHighlightPrefab;
     private GameObject[] previousMoveHighlights;
-
+    
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        userInterface = GetComponentInChildren<UserInterface>();
+        moveSelector = GetComponentInChildren<MoveSelector>();
         pieceManager = GetComponentInChildren<PieceManager>();
     }
 
@@ -40,100 +28,65 @@ public class Game : MonoBehaviour
         EventManager.instance.MoveOccured += Move;
         previousMoveHighlights = new GameObject[2];
         board.DrawGrid(size);
-        gameLayout = new GameLayout(size);
-        
+        chessState = new ChessState(size);
+
         InitializeGame();
     }
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            userInterface.OnClicked(gameLayout, playerMove);
-        }
+        moveSelector.CheckUserInput(chessState, chessState.activePlayer.playerType);
     }
 
     private void InitializeGame(){
-        
-        playerMove = PlayerType.White;
-
         // set board to default value
-        InitPiece(new int[] {0, 0}, PlayerType.White, PieceType.Rook);
-        InitPiece(new int[] {7, 0}, PlayerType.White, PieceType.Rook);
-        InitPiece(new int[] {1, 0}, PlayerType.White, PieceType.Knight);
-        InitPiece(new int[] {6, 0}, PlayerType.White, PieceType.Knight);
-        InitPiece(new int[] {2, 0}, PlayerType.White, PieceType.Bishop);
-        InitPiece(new int[] {5, 0}, PlayerType.White, PieceType.Bishop);
-        InitPiece(new int[] {3, 0}, PlayerType.White, PieceType.Queen);
-        InitPiece(new int[] {4, 0}, PlayerType.White, PieceType.King);
+        chessState.AddPiece(new int[] {0, 0}, PlayerType.White, PieceType.Rook);
+        chessState.AddPiece(new int[] {7, 0}, PlayerType.White, PieceType.Rook);
+        chessState.AddPiece(new int[] {1, 0}, PlayerType.White, PieceType.Knight);
+        chessState.AddPiece(new int[] {6, 0}, PlayerType.White, PieceType.Knight);
+        chessState.AddPiece(new int[] {2, 0}, PlayerType.White, PieceType.Bishop);
+        chessState.AddPiece(new int[] {5, 0}, PlayerType.White, PieceType.Bishop);
+        chessState.AddPiece(new int[] {3, 0}, PlayerType.White, PieceType.Queen);
+        chessState.AddPiece(new int[] {4, 0}, PlayerType.White, PieceType.King);
         for (int y = 0; y < size; y++)
-            InitPiece(new int[] {y, 1}, PlayerType.White, PieceType.Pawn);
+            chessState.AddPiece(new int[] {y, 1}, PlayerType.White, PieceType.Pawn);
         
-        InitPiece(new int[] {0, 7}, PlayerType.Black, PieceType.Rook);
-        InitPiece(new int[] {7, 7}, PlayerType.Black, PieceType.Rook);
-        InitPiece(new int[] {1, 7}, PlayerType.Black, PieceType.Knight);
-        InitPiece(new int[] {6, 7}, PlayerType.Black, PieceType.Knight);
-        InitPiece(new int[] {2, 7}, PlayerType.Black, PieceType.Bishop);
-        InitPiece(new int[] {5, 7}, PlayerType.Black, PieceType.Bishop);
-        InitPiece(new int[] {3, 7}, PlayerType.Black, PieceType.Queen);
-        InitPiece(new int[] {4, 7}, PlayerType.Black, PieceType.King);
+        chessState.AddPiece(new int[] {0, 7}, PlayerType.Black, PieceType.Rook);
+        chessState.AddPiece(new int[] {7, 7}, PlayerType.Black, PieceType.Rook);
+        chessState.AddPiece(new int[] {1, 7}, PlayerType.Black, PieceType.Knight);
+        chessState.AddPiece(new int[] {6, 7}, PlayerType.Black, PieceType.Knight);
+        chessState.AddPiece(new int[] {2, 7}, PlayerType.Black, PieceType.Bishop);
+        chessState.AddPiece(new int[] {5, 7}, PlayerType.Black, PieceType.Bishop);
+        chessState.AddPiece(new int[] {3, 7}, PlayerType.Black, PieceType.Queen);
+        chessState.AddPiece(new int[] {4, 7}, PlayerType.Black, PieceType.King);
         for (int y = 0; y < size; y++)
-            InitPiece(new int[] {y, 6}, PlayerType.Black, PieceType.Pawn);
+            chessState.AddPiece(new int[] {y, 6}, PlayerType.Black, PieceType.Pawn);
         
         DrawBoard();
     }
 
-    public void Move(int[] fromPos, int[] toPos)
+    public void Move(Move move)
     {
-        gameLayout.MovePiece(fromPos, toPos);
-        EndTurn();
+        chessState.MovePiece(move);
+
         DrawBoard();
-    }
-
-    public void EndTurn()
-    {
-        if (playerMove == PlayerType.White)
+        
+        int moveOutcome = chessState.CheckEndGame();
+        
+        switch (moveOutcome)
         {
-            playerMove = PlayerType.Black;
-        }
-        else if (playerMove == PlayerType.Black)
-        {
-            playerMove = PlayerType.White;
-        }
-        CheckEndGame();
-    }
-
-    public bool CheckEndGame()
-    {
-        for (int x = 0; x < size; x++)
-        {
-            for (int y = 0; y < size; y++)
-            {
-                if (gameLayout.state[x,y].containsPiece && gameLayout.state[x,y].piece.playerType == playerMove)
-                {
-                    if (gameLayout.state[x,y].piece.GetLegalMoves(gameLayout).Count > 0)
-                    {
-                        return false;
-                    }
-                }
-            }
-        }
-        if (gameLayout.IsKingInCheck(playerMove, gameLayout.GetKingPosition(playerMove)))
-        {
-            if (playerMove == PlayerType.White)
-                print("black wins by checkmate!");
-            if (playerMove == PlayerType.Black)
+            case 0:
+                break;
+            case 1:
                 print("white wins by checkmate!");
-            return true;
+                break;
+            case 2:
+                print("black wins by checkmate!");
+                break;
+            case 3:
+                print("draw by stalemate!");
+                break;
         }
-        print("stalemate!");
-        return true;
-
-        // check if draw by insufficient material
-
-        // check if draw by move limit
-
-        // check if draw by 3-fold repitition
     }
 
     public void DrawBoard()
@@ -144,9 +97,9 @@ public class Game : MonoBehaviour
         {
             for (int y = 0; y < size; y++)
             {
-                if (gameLayout.state[x,y].containsPiece)
+                if (chessState.boardState[x,y].containsPiece)
                 {
-                    pieceManager.DrawPiece(gameLayout.state[x,y].piece, new Vector3Int(x, y, 0));
+                    pieceManager.DrawPiece(chessState.boardState[x,y].piece, new Vector3Int(x, y, 0));
                 }
             }
         }
@@ -156,7 +109,7 @@ public class Game : MonoBehaviour
 
     public void DrawPreviousMove()
     {
-        if (gameLayout.previousMove==null)
+        if (chessState.previousMove==null)
         {
             return;
         }
@@ -164,49 +117,19 @@ public class Game : MonoBehaviour
         Destroy(previousMoveHighlights[1]);
         previousMoveHighlights[0] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
         previousMoveHighlights[1] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
-        previousMoveHighlights[0].transform.position = new Vector3Int(gameLayout.previousMove[0][0], gameLayout.previousMove[0][1], 0);
-        previousMoveHighlights[1].transform.position = new Vector3Int(gameLayout.previousMove[1][0], gameLayout.previousMove[1][1], 0);
+        previousMoveHighlights[0].transform.position = new Vector3Int(chessState.previousMove[0][0], chessState.previousMove[0][1], 0);
+        previousMoveHighlights[1].transform.position = new Vector3Int(chessState.previousMove[1][0], chessState.previousMove[1][1], 0);
     }
     
     public void DisplayCheck()
     {
         Destroy(isInCheck);
-        int[] kingPosition = gameLayout.GetKingPosition(playerMove);
-        if (gameLayout.IsKingInCheck(playerMove, gameLayout.GetKingPosition(playerMove)))
+        int[] kingPosition = chessState.GetKingPosition(chessState.activePlayer.playerType);
+        if (chessState.IsKingInCheck(chessState.activePlayer.playerType))
         {
             isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
             isInCheck.transform.position = new Vector3Int(kingPosition[0], kingPosition[1], 0);
         }
-    }
-
-    private void InitPiece(int[] position, PlayerType playerType, PieceType pieceType)
-    {
-        Piece newPiece;
-        switch (pieceType)
-        {
-            case PieceType.Pawn:
-                newPiece = new Pawn(position, playerType, pieceType);
-                break;
-            case PieceType.Rook:
-                newPiece = new Rook(position, playerType, pieceType);
-                break;
-            case PieceType.Knight:
-                newPiece = new Knight(position, playerType, pieceType);
-                break;
-            case PieceType.Bishop:
-                newPiece = new Bishop(position, playerType, pieceType);
-                break;
-            case PieceType.Queen:
-                newPiece = new Queen(position, playerType, pieceType);
-                break;
-            case PieceType.King:
-                newPiece = new King(position, playerType, pieceType);
-                break;
-            default:
-                newPiece = new Pawn(position, playerType, pieceType);
-                break;
-        }
-        gameLayout.AddPiece(position, newPiece);
     }
 
 }
