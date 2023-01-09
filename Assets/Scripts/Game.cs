@@ -2,21 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum PlayerType{
-    White,
-    Black
-}
-
 public class Game : MonoBehaviour
 {
     public static Game instance {get; private set;}
     public Board board;
-    public GameLayout gameLayout;
+    public ChessState chessState;
     public int size = 8;
     private UserInterface userInterface;
     private PieceManager pieceManager;
-
-    public PlayerType playerMove;
 
     public GameObject isInCheckPrefab;
     private GameObject isInCheck;
@@ -40,7 +33,7 @@ public class Game : MonoBehaviour
         EventManager.instance.MoveOccured += Move;
         previousMoveHighlights = new GameObject[2];
         board.DrawGrid(size);
-        gameLayout = new GameLayout(size);
+        chessState = new ChessState(size);
         
         InitializeGame();
     }
@@ -49,14 +42,11 @@ public class Game : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            userInterface.OnClicked(gameLayout, playerMove);
+            userInterface.SelectOnBoard(chessState, chessState.activePlayer.playerType);
         }
     }
 
     private void InitializeGame(){
-        
-        playerMove = PlayerType.White;
-
         // set board to default value
         InitPiece(new int[] {0, 0}, PlayerType.White, PieceType.Rook);
         InitPiece(new int[] {7, 0}, PlayerType.White, PieceType.Rook);
@@ -85,55 +75,48 @@ public class Game : MonoBehaviour
 
     public void Move(int[] fromPos, int[] toPos)
     {
-        gameLayout.MovePiece(fromPos, toPos);
-        EndTurn();
-        DrawBoard();
-    }
-
-    public void EndTurn()
-    {
-        if (playerMove == PlayerType.White)
+        if (!chessState.boardState[fromPos[0], fromPos[1]].containsPiece)
         {
-            playerMove = PlayerType.Black;
+            return;
         }
-        else if (playerMove == PlayerType.Black)
+        
+        // check for pawn promotion
+        PieceType promotedTo = PieceType.Queen;
+        
+        if (chessState.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.Pawn)
         {
-            playerMove = PlayerType.White;
-        }
-        CheckEndGame();
-    }
-
-    public bool CheckEndGame()
-    {
-        for (int x = 0; x < size; x++)
-        {
-            for (int y = 0; y < size; y++)
+            // white promoted
+            if (chessState.boardState[fromPos[0], fromPos[1]].piece.playerType == PlayerType.White && toPos[1] == 7)
             {
-                if (gameLayout.state[x,y].containsPiece && gameLayout.state[x,y].piece.playerType == playerMove)
-                {
-                    if (gameLayout.state[x,y].piece.GetLegalMoves(gameLayout).Count > 0)
-                    {
-                        return false;
-                    }
-                }
+                promotedTo = userInterface.GetPromotionPiece(PlayerType.White);
+            }
+            // black promoted
+            if (chessState.boardState[fromPos[0], fromPos[1]].piece.playerType == PlayerType.Black && toPos[1] == 0)
+            {
+                promotedTo = userInterface.GetPromotionPiece(PlayerType.Black);
             }
         }
-        if (gameLayout.IsKingInCheck(playerMove, gameLayout.GetKingPosition(playerMove)))
+        
+        chessState.MovePiece(fromPos, toPos, promotedTo);
+        
+        DrawBoard();
+        
+        int moveOutcome = chessState.CheckEndGame();
+        
+        switch (moveOutcome)
         {
-            if (playerMove == PlayerType.White)
-                print("black wins by checkmate!");
-            if (playerMove == PlayerType.Black)
+            case 0:
+                break;
+            case 1:
                 print("white wins by checkmate!");
-            return true;
+                break;
+            case 2:
+                print("black wins by checkmate!");
+                break;
+            case 3:
+                print("draw by stalemate!");
+                break;
         }
-        print("stalemate!");
-        return true;
-
-        // check if draw by insufficient material
-
-        // check if draw by move limit
-
-        // check if draw by 3-fold repitition
     }
 
     public void DrawBoard()
@@ -144,9 +127,9 @@ public class Game : MonoBehaviour
         {
             for (int y = 0; y < size; y++)
             {
-                if (gameLayout.state[x,y].containsPiece)
+                if (chessState.boardState[x,y].containsPiece)
                 {
-                    pieceManager.DrawPiece(gameLayout.state[x,y].piece, new Vector3Int(x, y, 0));
+                    pieceManager.DrawPiece(chessState.boardState[x,y].piece, new Vector3Int(x, y, 0));
                 }
             }
         }
@@ -156,7 +139,7 @@ public class Game : MonoBehaviour
 
     public void DrawPreviousMove()
     {
-        if (gameLayout.previousMove==null)
+        if (chessState.previousMove==null)
         {
             return;
         }
@@ -164,15 +147,15 @@ public class Game : MonoBehaviour
         Destroy(previousMoveHighlights[1]);
         previousMoveHighlights[0] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
         previousMoveHighlights[1] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
-        previousMoveHighlights[0].transform.position = new Vector3Int(gameLayout.previousMove[0][0], gameLayout.previousMove[0][1], 0);
-        previousMoveHighlights[1].transform.position = new Vector3Int(gameLayout.previousMove[1][0], gameLayout.previousMove[1][1], 0);
+        previousMoveHighlights[0].transform.position = new Vector3Int(chessState.previousMove[0][0], chessState.previousMove[0][1], 0);
+        previousMoveHighlights[1].transform.position = new Vector3Int(chessState.previousMove[1][0], chessState.previousMove[1][1], 0);
     }
     
     public void DisplayCheck()
     {
         Destroy(isInCheck);
-        int[] kingPosition = gameLayout.GetKingPosition(playerMove);
-        if (gameLayout.IsKingInCheck(playerMove, gameLayout.GetKingPosition(playerMove)))
+        int[] kingPosition = chessState.GetKingPosition(chessState.activePlayer.playerType);
+        if (chessState.IsKingInCheck(chessState.activePlayer.playerType))
         {
             isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
             isInCheck.transform.position = new Vector3Int(kingPosition[0], kingPosition[1], 0);
@@ -206,7 +189,7 @@ public class Game : MonoBehaviour
                 newPiece = new Pawn(position, playerType, pieceType);
                 break;
         }
-        gameLayout.AddPiece(position, newPiece);
+        chessState.AddPiece(position, newPiece);
     }
 
 }

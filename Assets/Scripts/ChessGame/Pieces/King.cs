@@ -11,7 +11,7 @@ public class King : Piece
         castlingRights = true;
     }
 
-    public override List<int[]> GetPossibleMoves(GameLayout gameLayout)
+    public override List<int[]> GetPossibleMoves(ChessState chessState)
     {
         List<int[]> possibleMoves = new List<int[]>();
         // basic directions
@@ -19,12 +19,12 @@ public class King : Piece
         {
             int[] move = new int[] {position[0] + direction[0], position[1] + direction[1]};
             
-            if (!gameLayout.IsInBoard(move))
+            if (!chessState.IsInBoard(move))
             {
                 continue;
             }
             
-            if (gameLayout.state[move[0], move[1]].containsPiece && gameLayout.state[move[0], move[1]].piece.playerType == this.playerType)
+            if (chessState.boardState[move[0], move[1]].containsPiece && chessState.boardState[move[0], move[1]].piece.playerType == this.playerType)
             {
                 continue;
             }
@@ -34,15 +34,15 @@ public class King : Piece
 
         return possibleMoves;
     }
-    public override List<int[]> GetLegalMoves(GameLayout gameLayout)
+    public override List<int[]> GetLegalMoves(ChessState chessState)
     {
-        List<int[]> possibleMoves = GetPossibleMoves(gameLayout);
-        possibleMoves.AddRange(GetCastlingMoves(gameLayout));
+        List<int[]> possibleMoves = GetPossibleMoves(chessState);
+        possibleMoves.AddRange(GetCastlingMoves(chessState));
         List<int[]> legalMoves = new List<int[]>();
         
         foreach (var move in possibleMoves)
         {
-            GameLayout virtualBoard = gameLayout.DeepCopy();
+            ChessState virtualBoard = chessState.DeepCopy();
             virtualBoard.MovePiece(position, move);
             if (virtualBoard.IsKingInCheck(this.playerType, virtualBoard.GetKingPosition(this.playerType)))
             {
@@ -55,7 +55,7 @@ public class King : Piece
         
     }
 
-    public List<int[]> GetCastlingMoves(GameLayout gameLayout)
+    public List<int[]> GetCastlingMoves(ChessState chessState)
     {
         List<int[]> possibleMoves = new List<int[]>();
         
@@ -64,19 +64,19 @@ public class King : Piece
             return possibleMoves;
         }
 
-        if (gameLayout.IsKingInCheck(this.playerType, this.position))
+        if (chessState.IsKingInCheck(this.playerType, this.position))
         {
             return possibleMoves;
         }
 
         // left castling
-        if (CheckLeftCastle(gameLayout))
+        if (CheckLeftCastle(chessState))
         {
             possibleMoves.Add(new int[]{position[0] - 2, 0});
         }
 
         // right castling
-        if (CheckRightCastle(gameLayout))
+        if (CheckRightCastle(chessState))
         {
             possibleMoves.Add(new int[]{position[0] + 2, 0});
         }
@@ -85,24 +85,24 @@ public class King : Piece
         
     }
 
-    public bool CheckLeftCastle(GameLayout gameLayout)
+    public bool CheckLeftCastle(ChessState chessState)
     {
-        if (!gameLayout.state[position[0] -4, position[1]].containsPiece)
+        if (!chessState.boardState[position[0] -4, position[1]].containsPiece)
         {
             return false;
         }
 
-        if (!(gameLayout.state[position[0] -4, position[1]].piece.playerType == this.playerType))
+        if (!(chessState.boardState[position[0] -4, position[1]].piece.playerType == this.playerType))
         {
             return false;
         }
         
-        if (!(gameLayout.state[position[0] -4, position[1]].piece.pieceType == PieceType.Rook))
+        if (!(chessState.boardState[position[0] -4, position[1]].piece.pieceType == PieceType.Rook))
         {
             return false;
         }
 
-        Rook leftRook = (Rook) gameLayout.state[position[0] -4, position[1]].piece;
+        Rook leftRook = (Rook) chessState.boardState[position[0] -4, position[1]].piece;
         
         if (!leftRook.castlingRights)
         {
@@ -112,7 +112,7 @@ public class King : Piece
         // check empty squares
         for (int i = 1; i < 4; i++)
         {
-            if (gameLayout.state[position[0]-i, position[1]].containsPiece)
+            if (chessState.boardState[position[0]-i, position[1]].containsPiece)
             {
                 return false;
             }
@@ -121,7 +121,7 @@ public class King : Piece
         // check no checks
         for (int i = 1; i < 3; i++)
         {
-            if (gameLayout.IsKingInCheck(this.playerType, new int[] {position[0]-i, 0}))
+            if (chessState.IsKingInCheck(this.playerType, new int[] {position[0]-i, 0}))
             {
                 return false;
             }
@@ -130,24 +130,24 @@ public class King : Piece
         return true;
     }
 
-    public bool CheckRightCastle(GameLayout gameLayout)
+    public bool CheckRightCastle(ChessState chessState)
     {
-        if (!gameLayout.state[position[0] +3, position[1]].containsPiece)
+        if (!chessState.boardState[position[0] +3, position[1]].containsPiece)
         {
             return false;
         }
 
-        if (!(gameLayout.state[position[0] +3, position[1]].piece.playerType == this.playerType))
+        if (!(chessState.boardState[position[0] +3, position[1]].piece.playerType == this.playerType))
         {
             return false;
         }
         
-        if (!(gameLayout.state[position[0] +3, position[1]].piece.pieceType == PieceType.Rook))
+        if (!(chessState.boardState[position[0] +3, position[1]].piece.pieceType == PieceType.Rook))
         {
             return false;
         }
 
-        Rook leftRook = (Rook) gameLayout.state[position[0] +3, position[1]].piece;
+        Rook leftRook = (Rook) chessState.boardState[position[0] +3, position[1]].piece;
         
         if (!leftRook.castlingRights)
         {
@@ -157,7 +157,7 @@ public class King : Piece
         // check empty squares
         for (int i = 1; i < 3; i++)
         {
-            if (gameLayout.state[position[0] + i, position[1]].containsPiece)
+            if (chessState.boardState[position[0] + i, position[1]].containsPiece)
             {
                 return false;
             }
@@ -166,7 +166,7 @@ public class King : Piece
         // check no checks
         for (int i = 1; i < 2; i++)
         {
-            if (gameLayout.IsKingInCheck(this.playerType, new int[] {position[0] + i, 0}))
+            if (chessState.IsKingInCheck(this.playerType, new int[] {position[0] + i, 0}))
             {
                 return false;
             }

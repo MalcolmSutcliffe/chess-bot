@@ -19,19 +19,19 @@ public class Pawn : Piece
         }
     }
 
-    public override List<int[]> GetPossibleMoves(GameLayout gameLayout)
+    public override List<int[]> GetPossibleMoves(ChessState chessState)
     {
         List<int[]> possibleMoves = new List<int[]>();
 
         int[] moveForward1 = new int[] {position[0], position[1] + travelDirection};
 
-        if (!gameLayout.IsInBoard(moveForward1))
+        if (!chessState.IsInBoard(moveForward1))
         {
             return possibleMoves;
         }
 
         // move forward 1
-        if (!gameLayout.state[moveForward1[0], moveForward1[1]].containsPiece)
+        if (!chessState.boardState[moveForward1[0], moveForward1[1]].containsPiece)
         {
             possibleMoves.Add(moveForward1);
         }
@@ -39,7 +39,7 @@ public class Pawn : Piece
         // move forward 2
         int[] moveForward2 = new int[] {position[0], position[1] + 2*travelDirection};
         
-        if (this.position[1] == startingYPosition && !gameLayout.state[moveForward2[0], moveForward2[1]].containsPiece)
+        if (this.position[1] == startingYPosition && !chessState.boardState[moveForward1[0], moveForward1[1]].containsPiece && !chessState.boardState[moveForward2[0], moveForward2[1]].containsPiece)
         {
             possibleMoves.Add(moveForward2);
         }
@@ -48,22 +48,22 @@ public class Pawn : Piece
         int[] captureLeft = new int[] {position[0] - 1, position[1] + travelDirection};
         int[] captureRight = new int[] {position[0] + 1, position[1] + travelDirection};
         
-        if (CheckCapture(gameLayout, -1))
+        if (CheckCapture(chessState, -1))
         {
             possibleMoves.Add(captureLeft);
         }
-        if (CheckCapture(gameLayout, 1))
+        if (CheckCapture(chessState, 1))
         {
             possibleMoves.Add(captureRight);
         }
         
         // en passant
-        if (CheckEnPasant(gameLayout, -1))
+        if (CheckEnPasant(chessState, -1))
         {
             possibleMoves.Add(captureLeft);
         }
 
-        if (CheckEnPasant(gameLayout, 1))
+        if (CheckEnPasant(chessState, 1))
         {
             possibleMoves.Add(captureRight);
         }
@@ -71,19 +71,19 @@ public class Pawn : Piece
         return possibleMoves;
     }
 
-    public bool CheckCapture(GameLayout gameLayout, int direction)
+    public bool CheckCapture(ChessState chessState, int direction)
     {
-        if (!gameLayout.IsInBoard(new int[] {position[0] + direction, position[1]}))
+        if (!chessState.IsInBoard(new int[] {position[0] + direction, position[1]}))
         {
             return false;
         }
 
-        if (!gameLayout.state[position[0] + direction, position[1] + travelDirection].containsPiece)
+        if (!chessState.boardState[position[0] + direction, position[1] + travelDirection].containsPiece)
         {
             return false;
         } 
 
-        if (gameLayout.state[position[0] + direction, position[1] + travelDirection].piece.playerType == this.playerType)
+        if (chessState.boardState[position[0] + direction, position[1] + travelDirection].piece.playerType == this.playerType)
         {
             return false;
         }
@@ -91,31 +91,31 @@ public class Pawn : Piece
         return true;
     }
 
-    public bool CheckEnPasant(GameLayout gameLayout, int direction)
+    public bool CheckEnPasant(ChessState chessState, int direction)
     {
-        if (!gameLayout.IsInBoard(new int[] {position[0] + direction, position[1]}))
+        if (!chessState.IsInBoard(new int[] {position[0] + direction, position[1]}))
         {
             return false;
         }
 
-        if (!gameLayout.state[position[0] + direction, position[1]].containsPiece)
+        if (!chessState.boardState[position[0] + direction, position[1]].containsPiece)
         {
             return false;
         } 
 
-        if (gameLayout.state[position[0] + direction, position[1]].piece.playerType == playerType)
+        if (chessState.boardState[position[0] + direction, position[1]].piece.playerType == playerType)
         {
             return false;
         }
 
-        if (gameLayout.state[position[0] + direction, position[1]].piece.pieceType != PieceType.Pawn)
+        if (chessState.boardState[position[0] + direction, position[1]].piece.pieceType != PieceType.Pawn)
         {
             return false;
         }
 
-        Pawn pawnAdj = (Pawn) gameLayout.state[position[0]+direction, position[1]].piece;
+        Pawn pawnAdj = (Pawn) chessState.boardState[position[0]+direction, position[1]].piece;
         
-        if (!pawnAdj.enPassantable(gameLayout))
+        if (!pawnAdj.enPassantable(chessState))
         {
             return false;
         }
@@ -124,9 +124,9 @@ public class Pawn : Piece
     }
 
     // method to check if this pawn is enPassantable
-    public bool enPassantable(GameLayout gameLayout)
+    public bool enPassantable(ChessState chessState)
     {
-        if (gameLayout.previousMove == null)
+        if (chessState.previousMove == null)
         {
             return false;
         }
@@ -135,7 +135,7 @@ public class Pawn : Piece
             return false;
         }
 
-        if (gameLayout.previousMove[1][0] != position[0] || gameLayout.previousMove[1][1] != position[1] )
+        if (chessState.previousMove[1][0] != position[0] || chessState.previousMove[1][1] != position[1] )
         {
             return false;
         }

@@ -18,20 +18,25 @@ public class UserInterface : MonoBehaviour
         tileGrid = GetComponentInChildren<Tilemap>();
     }
 
-    public void OnClicked(GameLayout gameLayout, PlayerType playerMove)
+    public PieceType GetPromotionPiece(PlayerType playerType)
+    {
+        return PieceType.Queen;
+    }
+
+    public void SelectOnBoard(ChessState chessState, PlayerType playerMove)
     {
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int tilePos = tileGrid.WorldToCell(worldPos);
         
         if (selectedPiece != null)
         {
-            if (!gameLayout.IsInBoard(new int[] {tilePos.x, tilePos.y}))
+            if (!chessState.IsInBoard(new int[] {tilePos.x, tilePos.y}))
             {
                 Unselect();
                 return;
             }
             
-            List<int[]> legalMoves = selectedPiece.GetLegalMoves(gameLayout);
+            List<int[]> legalMoves = selectedPiece.GetLegalMoves(chessState);
             
             List<Vector3Int> legalMovesV3 = new List<Vector3Int>();
             foreach (var m in legalMoves)
@@ -45,39 +50,39 @@ public class UserInterface : MonoBehaviour
                 Unselect();
                 return;
             }
-            if (gameLayout.state[tilePos.x, tilePos.y].containsPiece && tilePos.x == selectedPiece.position[0] && tilePos.y == selectedPiece.position[1])
+            if (chessState.boardState[tilePos.x, tilePos.y].containsPiece && tilePos.x == selectedPiece.position[0] && tilePos.y == selectedPiece.position[1])
             {
                 Unselect();
                 return;
             }
-            if (gameLayout.state[tilePos.x, tilePos.y].containsPiece && gameLayout.state[tilePos.x, tilePos.y].piece.playerType == Game.instance.playerMove)
+            if (chessState.boardState[tilePos.x, tilePos.y].containsPiece && chessState.boardState[tilePos.x, tilePos.y].piece.playerType == chessState.activePlayer.playerType)
             {
                 Unselect();
-                Select(gameLayout, tilePos);
+                Select(chessState, tilePos);
                 return;
             }
             return;
         }
 
-        if (!gameLayout.state[tilePos.x, tilePos.y].containsPiece)
+        if (!chessState.boardState[tilePos.x, tilePos.y].containsPiece)
         {
             Unselect();
             return;
         }
         
-        if (!(gameLayout.state[tilePos.x, tilePos.y].piece.playerType == playerMove))
+        if (!(chessState.boardState[tilePos.x, tilePos.y].piece.playerType == playerMove))
         {
             Unselect();
             return;
         }
-        Select(gameLayout, tilePos);
+        Select(chessState, tilePos);
     }
 
-    private void HighlightPostions(GameLayout gameLayout, List<int[]> positions)
+    private void HighlightPostions(ChessState chessState, List<int[]> positions)
     {
         foreach(var pos in positions)
         {
-            if (gameLayout.state[pos[0], pos[1]].containsPiece)
+            if (chessState.boardState[pos[0], pos[1]].containsPiece)
             {
                 var newObject = Instantiate(attackingPieceHighlightPrefab, gameObject.transform);
                 activeGameObjects.Add(newObject);
@@ -92,18 +97,18 @@ public class UserInterface : MonoBehaviour
         }
     }
 
-    private void Select(GameLayout gameLayout, Vector3Int tilePos)
+    private void Select(ChessState chessState, Vector3Int tilePos)
     {
-        if (!gameLayout.state[tilePos.x, tilePos.y].containsPiece)
+        if (!chessState.boardState[tilePos.x, tilePos.y].containsPiece)
         {
             Unselect();
             return;
         }
-        selectedPiece = gameLayout.state[tilePos.x, tilePos.y].piece;
+        selectedPiece = chessState.boardState[tilePos.x, tilePos.y].piece;
         var newObject = Instantiate(selectedHighlightPrefab, gameObject.transform);
         newObject.transform.position = tilePos;
         activeGameObjects.Add(newObject);
-        HighlightPostions(gameLayout, selectedPiece.GetLegalMoves(gameLayout));
+        HighlightPostions(chessState, selectedPiece.GetLegalMoves(chessState));
     }
 
     private void Unselect()

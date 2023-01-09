@@ -10,26 +10,26 @@ public abstract class SlidingPiece : Piece
         this.moveDirections = moveDirections;
     }
 
-    public override List<int[]> GetPossibleMoves(GameLayout gameLayout)
+    public override List<int[]> GetPossibleMoves(ChessState chessState)
     {
         List<int[]> possibleMoves = new List<int[]>();
         foreach (var direction in moveDirections)
         {
-            possibleMoves.AddRange(GetPossibleMovesInDirection(gameLayout, direction));
+            possibleMoves.AddRange(GetPossibleMovesInDirection(chessState, direction));
         }
         return possibleMoves;
     }
 
-    private List<int[]> GetPossibleMovesInDirection(GameLayout gameLayout, int[] direction)
+    private List<int[]> GetPossibleMovesInDirection(ChessState chessState, int[] direction)
     {
         List<int[]> possibleMovesInDirection = new List<int[]>();
         int[] move = position;
-        while(gameLayout.IsInBoard(new int[] {move[0] + direction[0], move[1] + direction[1]} ))
+        while(chessState.IsInBoard(new int[] {move[0] + direction[0], move[1] + direction[1]} ))
         {
             move = new int[] {move[0] + direction[0], move[1] + direction[1]};
-            if (gameLayout.state[move[0], move[1]].containsPiece)
+            if (chessState.boardState[move[0], move[1]].containsPiece)
             {
-                if (gameLayout.state[move[0], move[1]].piece.playerType == this.playerType)
+                if (chessState.boardState[move[0], move[1]].piece.playerType == this.playerType)
                 {
                     break;
                 }
