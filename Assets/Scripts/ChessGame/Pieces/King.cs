@@ -11,9 +11,9 @@ public class King : Piece
         castlingRights = true;
     }
 
-    public override List<int[]> GetPossibleMoves(ChessState chessState)
+    public override List<Move> GetPossibleMoves(ChessState chessState)
     {
-        List<int[]> possibleMoves = new List<int[]>();
+        List<Move> possibleMoves = new List<Move>();
         // basic directions
         foreach(var direction in KING_MOVE_DIRECTIONS)
         {
@@ -29,21 +29,21 @@ public class King : Piece
                 continue;
             }
             
-            possibleMoves.Add(move);
+            possibleMoves.Add(new Move(pieceType, position, move, chessState.boardState[move[0], move[1]].containsPiece, false, pieceType));
         }
 
         return possibleMoves;
     }
-    public override List<int[]> GetLegalMoves(ChessState chessState)
+    public override List<Move> GetLegalMoves(ChessState chessState)
     {
-        List<int[]> possibleMoves = GetPossibleMoves(chessState);
+        List<Move> possibleMoves = GetPossibleMoves(chessState);
         possibleMoves.AddRange(GetCastlingMoves(chessState));
-        List<int[]> legalMoves = new List<int[]>();
+        List<Move> legalMoves = new List<Move>();
         
         foreach (var move in possibleMoves)
         {
             ChessState virtualBoard = chessState.DeepCopy();
-            virtualBoard.MovePiece(position, move);
+            virtualBoard.MovePiece(move);
             if (virtualBoard.IsKingInCheck(this.playerType, virtualBoard.GetKingPosition(this.playerType)))
             {
                 continue;
@@ -55,9 +55,9 @@ public class King : Piece
         
     }
 
-    public List<int[]> GetCastlingMoves(ChessState chessState)
+    public List<Move> GetCastlingMoves(ChessState chessState)
     {
-        List<int[]> possibleMoves = new List<int[]>();
+        List<Move> possibleMoves = new List<Move>();
         
         if (!castlingRights)
         {
@@ -72,13 +72,13 @@ public class King : Piece
         // left castling
         if (CheckLeftCastle(chessState))
         {
-            possibleMoves.Add(new int[]{position[0] - 2, 0});
+            possibleMoves.Add(new Move(pieceType, position, new int[]{position[0] - 2, position[1]}, false, false, pieceType));
         }
 
         // right castling
         if (CheckRightCastle(chessState))
         {
-            possibleMoves.Add(new int[]{position[0] + 2, 0});
+            possibleMoves.Add(new Move(pieceType, position, new int[]{position[0] + 2, position[1]}, false, false, pieceType));
         }
 
         return possibleMoves;
@@ -121,7 +121,7 @@ public class King : Piece
         // check no checks
         for (int i = 1; i < 3; i++)
         {
-            if (chessState.IsKingInCheck(this.playerType, new int[] {position[0]-i, 0}))
+            if (chessState.IsKingInCheck(this.playerType, new int[] {position[0]-i, position[1]}))
             {
                 return false;
             }
@@ -166,7 +166,7 @@ public class King : Piece
         // check no checks
         for (int i = 1; i < 2; i++)
         {
-            if (chessState.IsKingInCheck(this.playerType, new int[] {position[0] + i, 0}))
+            if (chessState.IsKingInCheck(this.playerType, new int[] {position[0] + i, position[1]}))
             {
                 return false;
             }

@@ -10,9 +10,9 @@ public abstract class SlidingPiece : Piece
         this.moveDirections = moveDirections;
     }
 
-    public override List<int[]> GetPossibleMoves(ChessState chessState)
+    public override List<Move> GetPossibleMoves(ChessState chessState)
     {
-        List<int[]> possibleMoves = new List<int[]>();
+        List<Move> possibleMoves = new List<Move>();
         foreach (var direction in moveDirections)
         {
             possibleMoves.AddRange(GetPossibleMovesInDirection(chessState, direction));
@@ -20,9 +20,9 @@ public abstract class SlidingPiece : Piece
         return possibleMoves;
     }
 
-    private List<int[]> GetPossibleMovesInDirection(ChessState chessState, int[] direction)
+    private List<Move> GetPossibleMovesInDirection(ChessState chessState, int[] direction)
     {
-        List<int[]> possibleMovesInDirection = new List<int[]>();
+        List<Move> possibleMovesInDirection = new List<Move>();
         int[] move = position;
         while(chessState.IsInBoard(new int[] {move[0] + direction[0], move[1] + direction[1]} ))
         {
@@ -33,10 +33,10 @@ public abstract class SlidingPiece : Piece
                 {
                     break;
                 }
-                possibleMovesInDirection.Add(move);
+                possibleMovesInDirection.Add(new Move(pieceType, position, move, true, false, pieceType));
                 break;
             }
-            possibleMovesInDirection.Add(move);
+            possibleMovesInDirection.Add(new Move(pieceType, position, move, false, false, pieceType));
         }
         return possibleMovesInDirection;
     }

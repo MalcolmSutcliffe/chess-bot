@@ -19,9 +19,9 @@ public class Pawn : Piece
         }
     }
 
-    public override List<int[]> GetPossibleMoves(ChessState chessState)
+    public override List<Move> GetPossibleMoves(ChessState chessState)
     {
-        List<int[]> possibleMoves = new List<int[]>();
+        List<Move> possibleMoves = new List<Move>();
 
         int[] moveForward1 = new int[] {position[0], position[1] + travelDirection};
 
@@ -33,7 +33,7 @@ public class Pawn : Piece
         // move forward 1
         if (!chessState.boardState[moveForward1[0], moveForward1[1]].containsPiece)
         {
-            possibleMoves.Add(moveForward1);
+            possibleMoves.Add(new Move(pieceType, position, moveForward1, false, false, pieceType));
         }
 
         // move forward 2
@@ -41,7 +41,7 @@ public class Pawn : Piece
         
         if (this.position[1] == startingYPosition && !chessState.boardState[moveForward1[0], moveForward1[1]].containsPiece && !chessState.boardState[moveForward2[0], moveForward2[1]].containsPiece)
         {
-            possibleMoves.Add(moveForward2);
+            possibleMoves.Add(new Move(pieceType, position, moveForward2, false, false, pieceType));
         }
 
         // capture
@@ -50,22 +50,22 @@ public class Pawn : Piece
         
         if (CheckCapture(chessState, -1))
         {
-            possibleMoves.Add(captureLeft);
+            possibleMoves.Add(new Move(pieceType, position, captureLeft, true, false, pieceType));
         }
         if (CheckCapture(chessState, 1))
         {
-            possibleMoves.Add(captureRight);
+            possibleMoves.Add(new Move(pieceType, position, captureRight, true, false, pieceType));
         }
         
         // en passant
         if (CheckEnPasant(chessState, -1))
         {
-            possibleMoves.Add(captureLeft);
+            possibleMoves.Add(new Move(pieceType, position, captureLeft, true, false, pieceType));
         }
 
         if (CheckEnPasant(chessState, 1))
         {
-            possibleMoves.Add(captureRight);
+            possibleMoves.Add(new Move(pieceType, position, captureRight, true, false, pieceType));
         }
 
         return possibleMoves;

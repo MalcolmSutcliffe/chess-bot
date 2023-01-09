@@ -6,6 +6,7 @@ using UnityEngine.Tilemaps;
 [RequireComponent(typeof(Tilemap))]
 public class MoveSelector : MonoBehaviour
 {
+    [SerializeField] private GameObject pawnPromotionSelectionMenu;
     public Piece selectedPiece;
     public Tilemap tileGrid {get; private set;}
     public GameObject legalMovePrefab;
@@ -31,46 +32,37 @@ public class MoveSelector : MonoBehaviour
                 return;
             }
             
-            List<int[]> legalMoves = selectedPiece.GetLegalMoves(chessState);
+            List<Move> legalMoves = selectedPiece.GetLegalMoves(chessState);
             
-            List<Vector3Int> legalMovesV3 = new List<Vector3Int>();
             foreach (var m in legalMoves)
             {
-                legalMovesV3.Add(new Vector3Int(m[0], m[1], 0));
+                if (m.toPos[0] == tilePos.x && m.toPos[1] == tilePos.y)
+                {
+                    // check for pawn promotion
+                    if (m.promotePiece)
+                    {
+                    // pawnPromotionSelectionMenu.GetComponent<PawnPromotionSelectionMenu>().PromotePiece(PlayerType.White);
+                    }
+                    else
+                    {
+                        EventManager.instance.OnMoveOccured(m);
+                    }
+                    Unselect();
+                    return;
+                }
             }
-
-            if (legalMovesV3.Contains(tilePos))
-            {
-                // check for pawn promotion
-                if (selectedPiece.pieceType == PieceType.Pawn && selectedPiece.playerType == PlayerType.White && tilePos.y == 7)
-                {
-                    PieceType promotedTo = PieceType.Queen;
-                    EventManager.instance.OnMoveOccured(selectedPiece.position, new int[]{tilePos.x, tilePos.y}, true, promotedTo);
-                }
-                else if (selectedPiece.pieceType == PieceType.Pawn && selectedPiece.playerType == PlayerType.Black && tilePos.y == 0)
-                {
-                    PieceType promotedTo = PieceType.Queen;
-                    EventManager.instance.OnMoveOccured(selectedPiece.position, new int[]{tilePos.x, tilePos.y}, true, promotedTo);
-                }
-                else
-                {
-                    EventManager.instance.OnMoveOccured(selectedPiece.position, new int[]{tilePos.x, tilePos.y}, false, PieceType.Pawn);
-                }
-                Unselect();
-                return;
-            }
+            
             if (chessState.boardState[tilePos.x, tilePos.y].containsPiece && tilePos.x == selectedPiece.position[0] && tilePos.y == selectedPiece.position[1])
             {
-                Unselect();
-                return;
+                    Unselect();
+                    return;
             }
             if (chessState.boardState[tilePos.x, tilePos.y].containsPiece && chessState.boardState[tilePos.x, tilePos.y].piece.playerType == chessState.activePlayer.playerType)
             {
-                Unselect();
-                Select(chessState, tilePos);
-                return;
+                    Unselect();
+                    Select(chessState, tilePos);
+                    return;
             }
-            return;
         }
 
         if (!chessState.boardState[tilePos.x, tilePos.y].containsPiece)
@@ -117,7 +109,12 @@ public class MoveSelector : MonoBehaviour
         var newObject = Instantiate(selectedHighlightPrefab, gameObject.transform);
         newObject.transform.position = tilePos;
         activeGameObjects.Add(newObject);
-        HighlightPostions(chessState, selectedPiece.GetLegalMoves(chessState));
+        List<int[]> positions = new List<int[]>();
+        foreach(Move m in selectedPiece.GetLegalMoves(chessState))
+        {
+            positions.Add(m.toPos);
+        }
+        HighlightPostions(chessState, positions);
     }
 
     private void Unselect()

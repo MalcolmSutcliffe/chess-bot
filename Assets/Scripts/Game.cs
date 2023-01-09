@@ -68,9 +68,9 @@ public class Game : MonoBehaviour
         DrawBoard();
     }
 
-    public void Move(int[] fromPos, int[] toPos, bool doPromotion, PieceType promoteTo)
+    public void Move(Move move)
     {
-        chessState.MovePiece(fromPos, toPos, doPromotion, promoteTo);
+        chessState.MovePiece(move);
 
         DrawBoard();
         

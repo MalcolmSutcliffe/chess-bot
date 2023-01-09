@@ -15,12 +15,12 @@ public class EventManager: MonoBehaviour
         }
     }
 
-    public event Action<int[], int[], bool, PieceType> MoveOccured;
+    public event Action<Move> MoveOccured;
 
     // more events added here
 
-    public void OnMoveOccured(int[] fromPos, int[] toPos, bool doPromotion, PieceType promoteTo)
+    public void OnMoveOccured(Move move)
     {
-        MoveOccured?.Invoke(fromPos, toPos, doPromotion, promoteTo);
+        MoveOccured?.Invoke(move);
     }
 }

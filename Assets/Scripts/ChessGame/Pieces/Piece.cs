@@ -21,15 +21,15 @@ public abstract class Piece
         this.playerType = playerType;
         this.pieceType = pieceType;
     }
-    public virtual List<int[]> GetLegalMoves(ChessState ChessState){
+    public virtual List<Move> GetLegalMoves(ChessState ChessState){
         
-        List<int[]> possibleMoves = GetPossibleMoves(ChessState);
-        List<int[]> legalMoves = new List<int[]>();
+        List<Move> possibleMoves = GetPossibleMoves(ChessState);
+        List<Move> legalMoves = new List<Move>();
         
         foreach (var move in possibleMoves)
         {
             ChessState virtualBoard = ChessState.DeepCopy();
-            virtualBoard.MovePiece(position, move);
+            virtualBoard.MovePiece(move);
             if (virtualBoard.IsKingInCheck(this.playerType))
             {
                 continue;
@@ -40,7 +40,7 @@ public abstract class Piece
         return legalMoves;
     }
 
-    public abstract List<int[]> GetPossibleMoves(ChessState ChessState);
+    public abstract List<Move> GetPossibleMoves(ChessState ChessState);
 
     public virtual void Move(int[] position){
         this.position = position;
