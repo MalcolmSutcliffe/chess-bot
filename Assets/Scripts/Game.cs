@@ -27,7 +27,7 @@ public class Game : MonoBehaviour
     private void Start()
     {
         Camera.main.transform.position = new Vector3(size / 2f, size/ 2f, -10);
-        EventManager.instance.MoveOccured += Move;
+        EventManager.instance.MoveOccured += MoveOccured;
         previousMoveHighlights = new GameObject[2];
         board.DrawGrid(size);
         chessState = new ChessState(size);
@@ -70,8 +70,11 @@ public class Game : MonoBehaviour
         DrawBoard();
     }
 
-    public void Move(Move move)
+    public void MoveOccured(Move move)
     {
+
+        print(Move.EncodeMoveSAN(move, chessState));
+        
         chessState.MovePiece(move);
 
         DrawBoard();
