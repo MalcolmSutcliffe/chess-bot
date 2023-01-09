@@ -33,7 +33,18 @@ public class Pawn : Piece
         // move forward 1
         if (!chessState.boardState[moveForward1[0], moveForward1[1]].containsPiece)
         {
-            possibleMoves.Add(new Move(pieceType, position, moveForward1, false, false, pieceType));
+            // check promotion
+            if (IsPromoting(moveForward1))
+            {
+                possibleMoves.Add(new Move(pieceType, position, moveForward1, false, true, PieceType.Queen));
+                possibleMoves.Add(new Move(pieceType, position, moveForward1, false, true, PieceType.Knight));
+                possibleMoves.Add(new Move(pieceType, position, moveForward1, false, true, PieceType.Rook));
+                possibleMoves.Add(new Move(pieceType, position, moveForward1, false, true, PieceType.Bishop));
+            }
+            else
+            {
+                possibleMoves.Add(new Move(pieceType, position, moveForward1, false, false, pieceType));
+            }
         }
 
         // move forward 2
@@ -50,11 +61,33 @@ public class Pawn : Piece
         
         if (CheckCapture(chessState, -1))
         {
-            possibleMoves.Add(new Move(pieceType, position, captureLeft, true, false, pieceType));
+            // check promotion
+            if (IsPromoting(captureLeft))
+            {
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, true, PieceType.Queen));
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, true, PieceType.Knight));
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, true, PieceType.Rook));
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, true, PieceType.Bishop));
+            }
+            else
+            {
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, false, pieceType));
+            }
         }
         if (CheckCapture(chessState, 1))
         {
-            possibleMoves.Add(new Move(pieceType, position, captureRight, true, false, pieceType));
+            // check promotion
+            if (IsPromoting(captureRight))
+            {
+                possibleMoves.Add(new Move(pieceType, position, captureRight, false, true, PieceType.Queen));
+                possibleMoves.Add(new Move(pieceType, position, captureRight, false, true, PieceType.Knight));
+                possibleMoves.Add(new Move(pieceType, position, captureRight, false, true, PieceType.Rook));
+                possibleMoves.Add(new Move(pieceType, position, captureRight, false, true, PieceType.Bishop));
+            }
+            else
+            {
+                possibleMoves.Add(new Move(pieceType, position, captureRight, false, false, pieceType));
+            }
         }
         
         // en passant
@@ -71,7 +104,12 @@ public class Pawn : Piece
         return possibleMoves;
     }
 
-    public bool CheckCapture(ChessState chessState, int direction)
+    private bool IsPromoting(int[] toPos)
+    {
+        return (travelDirection == 1 && toPos[1] == 7) || (travelDirection == -1 && toPos[1]==0);
+    }
+
+    private bool CheckCapture(ChessState chessState, int direction)
     {
         if (!chessState.IsInBoard(new int[] {position[0] + direction, position[1]}))
         {
@@ -91,7 +129,7 @@ public class Pawn : Piece
         return true;
     }
 
-    public bool CheckEnPasant(ChessState chessState, int direction)
+    private bool CheckEnPasant(ChessState chessState, int direction)
     {
         if (!chessState.IsInBoard(new int[] {position[0] + direction, position[1]}))
         {
