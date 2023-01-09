@@ -48,27 +48,27 @@ public class Game : MonoBehaviour
 
     private void InitializeGame(){
         // set board to default value
-        InitPiece(new int[] {0, 0}, PlayerType.White, PieceType.Rook);
-        InitPiece(new int[] {7, 0}, PlayerType.White, PieceType.Rook);
-        InitPiece(new int[] {1, 0}, PlayerType.White, PieceType.Knight);
-        InitPiece(new int[] {6, 0}, PlayerType.White, PieceType.Knight);
-        InitPiece(new int[] {2, 0}, PlayerType.White, PieceType.Bishop);
-        InitPiece(new int[] {5, 0}, PlayerType.White, PieceType.Bishop);
-        InitPiece(new int[] {3, 0}, PlayerType.White, PieceType.Queen);
-        InitPiece(new int[] {4, 0}, PlayerType.White, PieceType.King);
+        chessState.AddPiece(new int[] {0, 0}, PlayerType.White, PieceType.Rook);
+        chessState.AddPiece(new int[] {7, 0}, PlayerType.White, PieceType.Rook);
+        chessState.AddPiece(new int[] {1, 0}, PlayerType.White, PieceType.Knight);
+        chessState.AddPiece(new int[] {6, 0}, PlayerType.White, PieceType.Knight);
+        chessState.AddPiece(new int[] {2, 0}, PlayerType.White, PieceType.Bishop);
+        chessState.AddPiece(new int[] {5, 0}, PlayerType.White, PieceType.Bishop);
+        chessState.AddPiece(new int[] {3, 0}, PlayerType.White, PieceType.Queen);
+        chessState.AddPiece(new int[] {4, 0}, PlayerType.White, PieceType.King);
         for (int y = 0; y < size; y++)
-            InitPiece(new int[] {y, 1}, PlayerType.White, PieceType.Pawn);
+            chessState.AddPiece(new int[] {y, 1}, PlayerType.White, PieceType.Pawn);
         
-        InitPiece(new int[] {0, 7}, PlayerType.Black, PieceType.Rook);
-        InitPiece(new int[] {7, 7}, PlayerType.Black, PieceType.Rook);
-        InitPiece(new int[] {1, 7}, PlayerType.Black, PieceType.Knight);
-        InitPiece(new int[] {6, 7}, PlayerType.Black, PieceType.Knight);
-        InitPiece(new int[] {2, 7}, PlayerType.Black, PieceType.Bishop);
-        InitPiece(new int[] {5, 7}, PlayerType.Black, PieceType.Bishop);
-        InitPiece(new int[] {3, 7}, PlayerType.Black, PieceType.Queen);
-        InitPiece(new int[] {4, 7}, PlayerType.Black, PieceType.King);
+        chessState.AddPiece(new int[] {0, 7}, PlayerType.Black, PieceType.Rook);
+        chessState.AddPiece(new int[] {7, 7}, PlayerType.Black, PieceType.Rook);
+        chessState.AddPiece(new int[] {1, 7}, PlayerType.Black, PieceType.Knight);
+        chessState.AddPiece(new int[] {6, 7}, PlayerType.Black, PieceType.Knight);
+        chessState.AddPiece(new int[] {2, 7}, PlayerType.Black, PieceType.Bishop);
+        chessState.AddPiece(new int[] {5, 7}, PlayerType.Black, PieceType.Bishop);
+        chessState.AddPiece(new int[] {3, 7}, PlayerType.Black, PieceType.Queen);
+        chessState.AddPiece(new int[] {4, 7}, PlayerType.Black, PieceType.King);
         for (int y = 0; y < size; y++)
-            InitPiece(new int[] {y, 6}, PlayerType.Black, PieceType.Pawn);
+            chessState.AddPiece(new int[] {y, 6}, PlayerType.Black, PieceType.Pawn);
         
         DrawBoard();
     }
@@ -80,25 +80,23 @@ public class Game : MonoBehaviour
             return;
         }
         
-        // check for pawn promotion
-        PieceType promotedTo = PieceType.Queen;
-        
-        if (chessState.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.Pawn)
+        // check for white pawn promotion
+        if (chessState.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.Pawn && chessState.boardState[fromPos[0], fromPos[1]].piece.playerType == PlayerType.White && toPos[1] == 7)
         {
-            // white promoted
-            if (chessState.boardState[fromPos[0], fromPos[1]].piece.playerType == PlayerType.White && toPos[1] == 7)
-            {
-                promotedTo = userInterface.GetPromotionPiece(PlayerType.White);
-            }
-            // black promoted
-            if (chessState.boardState[fromPos[0], fromPos[1]].piece.playerType == PlayerType.Black && toPos[1] == 0)
-            {
-                promotedTo = userInterface.GetPromotionPiece(PlayerType.Black);
-            }
+            PieceType promotedTo = userInterface.GetPromotionPiece(PlayerType.White);
+            chessState.MovePiece(fromPos, toPos, true, promotedTo);
         }
-        
-        chessState.MovePiece(fromPos, toPos, promotedTo);
-        
+        // check for black pawn promotion
+        else if (chessState.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.Pawn && chessState.boardState[fromPos[0], fromPos[1]].piece.playerType == PlayerType.Black && toPos[1] == 0)
+        {
+            PieceType promotedTo = userInterface.GetPromotionPiece(PlayerType.White);
+            chessState.MovePiece(fromPos, toPos, true, promotedTo);
+        }
+        else 
+        {
+            chessState.MovePiece(fromPos, toPos);
+        }
+
         DrawBoard();
         
         int moveOutcome = chessState.CheckEndGame();
@@ -160,36 +158,6 @@ public class Game : MonoBehaviour
             isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
             isInCheck.transform.position = new Vector3Int(kingPosition[0], kingPosition[1], 0);
         }
-    }
-
-    private void InitPiece(int[] position, PlayerType playerType, PieceType pieceType)
-    {
-        Piece newPiece;
-        switch (pieceType)
-        {
-            case PieceType.Pawn:
-                newPiece = new Pawn(position, playerType, pieceType);
-                break;
-            case PieceType.Rook:
-                newPiece = new Rook(position, playerType, pieceType);
-                break;
-            case PieceType.Knight:
-                newPiece = new Knight(position, playerType, pieceType);
-                break;
-            case PieceType.Bishop:
-                newPiece = new Bishop(position, playerType, pieceType);
-                break;
-            case PieceType.Queen:
-                newPiece = new Queen(position, playerType, pieceType);
-                break;
-            case PieceType.King:
-                newPiece = new King(position, playerType, pieceType);
-                break;
-            default:
-                newPiece = new Pawn(position, playerType, pieceType);
-                break;
-        }
-        chessState.AddPiece(position, newPiece);
     }
 
 }

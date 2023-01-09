@@ -31,22 +31,7 @@ public class ChessState{
         }
     }
 
-    public void AddPiece(int[] position, Piece piece)
-    {
-        this.boardState[position[0], position[1]].SetPiece(piece);
-        
-        if (piece.playerType == PlayerType.White)
-        {
-            playerWhite.AddPiece(piece);
-        }
-
-        if (piece.playerType == PlayerType.Black)
-        {
-            playerBlack.AddPiece(piece);
-        }
-    }
-
-    public void MovePiece(int[] fromPos, int[] toPos, PieceType promotedTo=PieceType.Queen)
+    public void MovePiece(int[] fromPos, int[] toPos, bool promotePiece=false, PieceType promotedTo=PieceType.Queen)
     {
 
         // check that position has a piece
@@ -89,19 +74,26 @@ public class ChessState{
             CapturePiece(boardState[toPos[0], fromPos[1]].piece);
         }
 
-        // EDGE CASE: pawn promotion
-
         // if position moving to has piece, remove it
         if (this.boardState[toPos[0], toPos[1]].containsPiece)
         {
              CapturePiece(boardState[toPos[0], toPos[1]].piece);
         }
-        
-        // move piece
-        piece.Move(toPos);
-        this.boardState[fromPos[0], fromPos[1]].RemovePiece();
-        this.boardState[toPos[0], toPos[1]].SetPiece(piece);
 
+        // EDGE CASE: pawn promotion
+        if (promotePiece)
+        {
+            CapturePiece(boardState[fromPos[0], fromPos[1]].piece);
+            AddPiece(toPos, activePlayer.playerType, promotedTo);
+        }
+        else
+        {
+            // move piece
+            piece.Move(toPos);
+            this.boardState[fromPos[0], fromPos[1]].RemovePiece();
+            this.boardState[toPos[0], toPos[1]].SetPiece(piece);
+        }
+        
         this.previousMove = new int[][]{fromPos, toPos};
 
         EndTurn();
@@ -208,6 +200,46 @@ public class ChessState{
         return 3;
 
         
+    }
+
+    public void AddPiece(int[] position, PlayerType playerType, PieceType pieceType)
+    {
+        Piece newPiece;
+        switch (pieceType)
+        {
+            case PieceType.Pawn:
+                newPiece = new Pawn(position, playerType, pieceType);
+                break;
+            case PieceType.Rook:
+                newPiece = new Rook(position, playerType, pieceType);
+                break;
+            case PieceType.Knight:
+                newPiece = new Knight(position, playerType, pieceType);
+                break;
+            case PieceType.Bishop:
+                newPiece = new Bishop(position, playerType, pieceType);
+                break;
+            case PieceType.Queen:
+                newPiece = new Queen(position, playerType, pieceType);
+                break;
+            case PieceType.King:
+                newPiece = new King(position, playerType, pieceType);
+                break;
+            default:
+                newPiece = new Pawn(position, playerType, pieceType);
+                break;
+        }
+        this.boardState[position[0], position[1]].SetPiece(newPiece);
+        
+        if (playerType == PlayerType.White)
+        {
+            playerWhite.AddPiece(newPiece);
+        }
+
+        if (playerType == PlayerType.Black)
+        {
+            playerBlack.AddPiece(newPiece);
+        }
     }
 
     public bool IsInBoard(int[] position){
