@@ -191,7 +191,6 @@ public class ChessState{
         {
             if (piece.GetLegalMoves(this).Count > 0)
             {
-                // Debug.Log(piece.position[0] + " " + piece.position[1] + " "  + piece.GetLegalMoves(this)[0][0] + " "  + piece.GetLegalMoves(this)[0][1]);
                 return 0;
             }
         }
@@ -204,8 +203,11 @@ public class ChessState{
                 return 2;
         }
         return 3;
+    }
 
-        
+    public string EncodeMoveSAN(Move move)
+    {
+        return "";
     }
 
     // take a move in chess standard algebraic notation and convert to a move object

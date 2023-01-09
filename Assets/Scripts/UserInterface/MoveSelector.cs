@@ -6,7 +6,6 @@ using UnityEngine.Tilemaps;
 [RequireComponent(typeof(Tilemap))]
 public class MoveSelector : MonoBehaviour
 {
-    [SerializeField] private GameObject pawnPromotionSelectionMenu;
     public Piece selectedPiece;
     public Tilemap tileGrid {get; private set;}
     public GameObject legalMovePrefab;
@@ -14,15 +13,52 @@ public class MoveSelector : MonoBehaviour
     public GameObject attackingPieceHighlightPrefab;
     private List<GameObject> activeGameObjects = new List<GameObject>();
 
+    [SerializeField] private GameObject pawnPromotionMenu;
+    private bool isPromoting;
+    private int[] promoteFromPos;
+    private int[] promoteToPos;
+    private bool isPromotionCapture;
+
     void Awake()
     {
         tileGrid = GetComponentInChildren<Tilemap>();
+        EventManager.instance.PawnPromotionStarted += StartPawnPromotion;
+        EventManager.instance.PawnPromotionEnded += StopPawnPromotion;
     }
 
-    public void SelectOnBoard(ChessState chessState, PlayerType playerMove)
+    private void StartPawnPromotion(int[] fromPos, int[] toPos, bool isCapture)
+    {
+        promoteFromPos = fromPos;
+        promoteToPos = toPos;
+        isPromotionCapture = isCapture;
+        isPromoting = true;
+        pawnPromotionMenu.SetActive(true);
+    }
+
+    private void StopPawnPromotion()
+    {
+        promoteFromPos = new int[] {-1, -1};
+        promoteToPos = new int[] {-1, -1};
+        isPromotionCapture = false;
+        isPromoting = false;
+        pawnPromotionMenu.SetActive(false);
+    }
+
+    public void CheckUserInput(ChessState chessState, PlayerType playerMove)
     {
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int tilePos = tileGrid.WorldToCell(worldPos);
+
+        if (isPromoting)
+        {
+            pawnPromotionMenu.GetComponent<PawnPromotionSelector>().CheckPromotion(promoteFromPos, promoteToPos, isPromotionCapture, chessState.activePlayer.playerType);
+            return;
+        }
+
+        if (!Input.GetMouseButtonDown(0))
+        {
+            return;
+        }
         
         if (selectedPiece != null)
         {
@@ -41,7 +77,7 @@ public class MoveSelector : MonoBehaviour
                     // check for pawn promotion
                     if (m.promotePiece)
                     {
-                    // pawnPromotionSelectionMenu.GetComponent<PawnPromotionSelectionMenu>().PromotePiece(PlayerType.White);
+                        EventManager.instance.OnPawnPromotionStarted(m.fromPos, m.toPos, m.capturePiece);
                     }
                     else
                     {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -29,8 +30,10 @@ public class Player{
             if (this.king == null)
             {
                 this.king = piece;
+            } else
+            {
+                throw new ArgumentException("Error: Player cannot have 2 kings");
             }
-            return;
         }
         this.pieces.Add(piece);
     }
@@ -44,8 +47,7 @@ public class Player{
         
         if (piece.pieceType == PieceType.King)
         {
-            // should not happen
-            return;
+            throw new ArgumentException("Error: Cannot remove player king");
         }
         this.pieces.Remove(piece);
     }

@@ -29,16 +29,13 @@ public class Game : MonoBehaviour
         previousMoveHighlights = new GameObject[2];
         board.DrawGrid(size);
         chessState = new ChessState(size);
-        
+
         InitializeGame();
     }
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            moveSelector.SelectOnBoard(chessState, chessState.activePlayer.playerType);
-        }
+        moveSelector.CheckUserInput(chessState, chessState.activePlayer.playerType);
     }
 
     private void InitializeGame(){

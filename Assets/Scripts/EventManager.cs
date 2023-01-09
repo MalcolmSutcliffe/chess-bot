@@ -16,11 +16,22 @@ public class EventManager: MonoBehaviour
     }
 
     public event Action<Move> MoveOccured;
+    public event Action<int[], int[], bool> PawnPromotionStarted;
+    public event Action PawnPromotionEnded;
 
     // more events added here
 
     public void OnMoveOccured(Move move)
     {
         MoveOccured?.Invoke(move);
+    }
+
+    public void OnPawnPromotionStarted(int[] fromPos, int[] toPos, bool isCapture)
+    {
+        PawnPromotionStarted?.Invoke(fromPos, toPos, isCapture);
+    }
+    public void OnPawnPromotionEnded()
+    {
+        PawnPromotionEnded?.Invoke();
     }
 }
