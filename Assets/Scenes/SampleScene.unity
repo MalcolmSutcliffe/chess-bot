@@ -589,7 +589,6 @@ MonoBehaviour:
   size: 8
   isInCheckPrefab: {fileID: 1898370846522680573, guid: e2092ec2af57311499a52d001ffa89be, type: 3}
   previousMoveHighlightPrefab: {fileID: 2654601256662819412, guid: 6bf42525d1c510e4097a8084d4a15e57, type: 3}
-  pawnPromotionMenu: {fileID: 1328218103}
 --- !u!4 &828364110
 Transform:
   m_ObjectHideFlags: 0
@@ -1462,10 +1461,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49e9a8ac0d34aac45adb021600648f2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pawnPromotionSelectionMenu: {fileID: 0}
   legalMovePrefab: {fileID: 1076949981256920288, guid: f10d58c2eee5fee498d1770747475a21, type: 3}
   selectedHighlightPrefab: {fileID: 8591586196345364359, guid: a344a095dad1cbb488e84b5c6a4687d6, type: 3}
   attackingPieceHighlightPrefab: {fileID: 2174941111173673969, guid: 113e98c7820cb1645a8280bed6c4c57f, type: 3}
+  pawnPromotionMenu: {fileID: 1328218103}
 --- !u!1 &1747449043
 GameObject:
   m_ObjectHideFlags: 0
