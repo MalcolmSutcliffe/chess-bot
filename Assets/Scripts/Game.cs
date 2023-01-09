@@ -4,26 +4,21 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
-    public static Game instance {get; private set;}
     public Board board;
     public ChessState chessState;
     public int size = 8;
-    private UserInterface userInterface;
     private PieceManager pieceManager;
+    private MoveSelector moveSelector;
 
     public GameObject isInCheckPrefab;
     private GameObject isInCheck;
     
     public GameObject previousMoveHighlightPrefab;
     private GameObject[] previousMoveHighlights;
-
+    
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        userInterface = GetComponentInChildren<UserInterface>();
+        moveSelector = GetComponentInChildren<MoveSelector>();
         pieceManager = GetComponentInChildren<PieceManager>();
     }
 
@@ -42,7 +37,7 @@ public class Game : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            userInterface.SelectOnBoard(chessState, chessState.activePlayer.playerType);
+            moveSelector.SelectOnBoard(chessState, chessState.activePlayer.playerType);
         }
     }
 
@@ -73,29 +68,9 @@ public class Game : MonoBehaviour
         DrawBoard();
     }
 
-    public void Move(int[] fromPos, int[] toPos)
+    public void Move(int[] fromPos, int[] toPos, bool doPromotion, PieceType promoteTo)
     {
-        if (!chessState.boardState[fromPos[0], fromPos[1]].containsPiece)
-        {
-            return;
-        }
-        
-        // check for white pawn promotion
-        if (chessState.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.Pawn && chessState.boardState[fromPos[0], fromPos[1]].piece.playerType == PlayerType.White && toPos[1] == 7)
-        {
-            PieceType promotedTo = userInterface.GetPromotionPiece(PlayerType.White);
-            chessState.MovePiece(fromPos, toPos, true, promotedTo);
-        }
-        // check for black pawn promotion
-        else if (chessState.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.Pawn && chessState.boardState[fromPos[0], fromPos[1]].piece.playerType == PlayerType.Black && toPos[1] == 0)
-        {
-            PieceType promotedTo = userInterface.GetPromotionPiece(PlayerType.White);
-            chessState.MovePiece(fromPos, toPos, true, promotedTo);
-        }
-        else 
-        {
-            chessState.MovePiece(fromPos, toPos);
-        }
+        chessState.MovePiece(fromPos, toPos, doPromotion, promoteTo);
 
         DrawBoard();
         

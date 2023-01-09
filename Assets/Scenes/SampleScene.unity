@@ -365,9 +365,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   board: {fileID: 1383947274}
   size: 8
-  playerMove: 0
   isInCheckPrefab: {fileID: 1898370846522680573, guid: e2092ec2af57311499a52d001ffa89be, type: 3}
-  isInCheck: {fileID: 0}
+  previousMoveHighlightPrefab: {fileID: 2654601256662819412, guid: 6bf42525d1c510e4097a8084d4a15e57, type: 3}
 --- !u!4 &828364110
 Transform:
   m_ObjectHideFlags: 0
@@ -739,7 +738,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1731692802}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 17d1b3f60918b4f49b4ffa674a934cd9, type: 3}
+  m_Script: {fileID: 11500000, guid: 49e9a8ac0d34aac45adb021600648f2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   legalMovePrefab: {fileID: 1076949981256920288, guid: f10d58c2eee5fee498d1770747475a21, type: 3}

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 [RequireComponent(typeof(Tilemap))]
-public class UserInterface : MonoBehaviour
+public class MoveSelector : MonoBehaviour
 {
     public Piece selectedPiece;
     public Tilemap tileGrid {get; private set;}
@@ -16,11 +16,6 @@ public class UserInterface : MonoBehaviour
     void Awake()
     {
         tileGrid = GetComponentInChildren<Tilemap>();
-    }
-
-    public PieceType GetPromotionPiece(PlayerType playerType)
-    {
-        return PieceType.Queen;
     }
 
     public void SelectOnBoard(ChessState chessState, PlayerType playerMove)
@@ -46,7 +41,21 @@ public class UserInterface : MonoBehaviour
 
             if (legalMovesV3.Contains(tilePos))
             {
-                EventManager.instance.OnMoveOccured(selectedPiece.position, new int[]{tilePos.x, tilePos.y});
+                // check for pawn promotion
+                if (selectedPiece.pieceType == PieceType.Pawn && selectedPiece.playerType == PlayerType.White && tilePos.y == 7)
+                {
+                    PieceType promotedTo = PieceType.Queen;
+                    EventManager.instance.OnMoveOccured(selectedPiece.position, new int[]{tilePos.x, tilePos.y}, true, promotedTo);
+                }
+                else if (selectedPiece.pieceType == PieceType.Pawn && selectedPiece.playerType == PlayerType.Black && tilePos.y == 0)
+                {
+                    PieceType promotedTo = PieceType.Queen;
+                    EventManager.instance.OnMoveOccured(selectedPiece.position, new int[]{tilePos.x, tilePos.y}, true, promotedTo);
+                }
+                else
+                {
+                    EventManager.instance.OnMoveOccured(selectedPiece.position, new int[]{tilePos.x, tilePos.y}, false, PieceType.Pawn);
+                }
                 Unselect();
                 return;
             }

@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
+// using UnityEngine;
 public class ChessState{
     public ChessSquare[,] boardState {get; private set;}
     public int size {get; private set;}
@@ -186,6 +186,7 @@ public class ChessState{
         {
             if (piece.GetLegalMoves(this).Count > 0)
             {
+                // Debug.Log(piece.position[0] + " " + piece.position[1] + " "  + piece.GetLegalMoves(this)[0][0] + " "  + piece.GetLegalMoves(this)[0][1]);
                 return 0;
             }
         }
