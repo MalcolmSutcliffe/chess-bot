@@ -70,13 +70,13 @@ public class King : Piece
         }
 
         // left castling
-        if (CheckLeftCastle(chessState))
+        if (CheckQueensideCastle(chessState))
         {
             possibleMoves.Add(new Move(pieceType, position, new int[]{position[0] - 2, position[1]}, false, false, pieceType));
         }
 
         // right castling
-        if (CheckRightCastle(chessState))
+        if (CheckKingsideCastle(chessState))
         {
             possibleMoves.Add(new Move(pieceType, position, new int[]{position[0] + 2, position[1]}, false, false, pieceType));
         }
@@ -85,7 +85,7 @@ public class King : Piece
         
     }
 
-    public bool CheckLeftCastle(ChessState chessState)
+    public bool CheckQueensideCastle(ChessState chessState)
     {
         if (!chessState.boardState[position[0] -4, position[1]].containsPiece)
         {
@@ -130,7 +130,7 @@ public class King : Piece
         return true;
     }
 
-    public bool CheckRightCastle(ChessState chessState)
+    public bool CheckKingsideCastle(ChessState chessState)
     {
         if (!chessState.boardState[position[0] +3, position[1]].containsPiece)
         {

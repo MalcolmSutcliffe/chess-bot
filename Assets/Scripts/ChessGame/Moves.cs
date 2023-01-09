@@ -4,23 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Move {
-
-    public static Dictionary<char, PieceType> charToPiece = new Dictionary<char, PieceType>{
-        {'R' , PieceType.Rook},
-        {'N' , PieceType.Knight},
-        {'B' , PieceType.Bishop},
-        {'Q' , PieceType.Queen},
-        {'K' , PieceType.King}, 
-    };
-
-    public static Dictionary<PieceType, char> pieceToChar = new Dictionary<PieceType, char>{
-        {PieceType.Rook, 'R'},
-        {PieceType.Knight, 'N'},
-        {PieceType.Bishop, 'B'},
-        {PieceType.Queen, 'Q'},
-        {PieceType.King, 'K'}, 
-    };
-    
     public PieceType pieceType {get; private set;}
     public int[] fromPos {get; private set;}
     public int[] toPos {get; private set;}
@@ -53,7 +36,7 @@ public class Move {
         }
         if (move.pieceType != PieceType.Pawn)
         {
-            toReturn += pieceToChar[move.pieceType];
+            toReturn += Piece.pieceToChar[move.pieceType];
         }
 
         bool disambiguateByFile = false;
@@ -82,16 +65,14 @@ public class Move {
                 // if can travel to same position, then disambiguation is required
                 if (m.toPos[0] == move.toPos[0] && m.toPos[1] == move.toPos[1])
                 {
-                    // if in same rank, must disambiguate by file
-                    if (piece.position[1] == move.fromPos[1])
+                    // if not in same file, disambiguate by file
+                    if (piece.position[0] != move.fromPos[0])
                     {
                         disambiguateByFile = true;
-                    }  
-                    // if in same file, disambiguate by rank
-                    if (piece.position[0] == move.fromPos[0])
-                    {
-                        disambiguateByRank = true;
+                        continue;
                     }
+                    // otherwise disambiguate by rank
+                    disambiguateByRank = true;
                 }
             }
         }
@@ -123,7 +104,7 @@ public class Move {
         if (move.promotePiece)
         {
             toReturn += '=';
-            toReturn += pieceToChar[move.promotedTo];
+            toReturn += Piece.pieceToChar[move.promotedTo];
         }
 
         return toReturn;
@@ -164,7 +145,7 @@ public class Move {
         // encode piece 
         if (moveSAN[0] >= 65 && moveSAN[0] <= 90)
         {
-            pieceType = Move.charToPiece[moveSAN[0]];
+            pieceType = Piece.charToPiece[moveSAN[0]];
             // remove first char
             moveSAN.Remove(0, 1);
         }
@@ -181,7 +162,7 @@ public class Move {
         promotePiece = moveSAN.Contains("=");
         if (promotePiece)
         {
-            promotedTo = Move.charToPiece[moveSAN.Last()];
+            promotedTo = Piece.charToPiece[moveSAN.Last()];
             moveSAN.Remove(moveSAN.Length-1, 2);
         }
         else

@@ -251,9 +251,106 @@ public class ChessState{
         return false;
     }
 
-    public static string EncodeBoardState()
+    public static string EncodeChessStateFEN(ChessState chessState)
     {
-        return "";
+        string toReturn = "";
+
+        // encode board state
+        toReturn += EncodeBoardState(chessState.boardState);
+
+        toReturn += " ";
+
+        // encode player turn
+        if (chessState.activePlayer.playerType == PlayerType.White)
+        {
+            toReturn += "w";
+        }
+        else if (chessState.activePlayer.playerType == PlayerType.Black)
+        {
+            toReturn += "b";
+        }
+
+        toReturn += " ";
+        
+        //encode castling rights
+        // bool hasEncodedCastlingRights = false;
+        // if (chessState.playerWhite.king.CheckKingsideCastle(chessState))
+        // {
+        //     toReturn += "K";
+        //     hasEncodedCastlingRights = true;
+        // }
+        // if (chessState.playerWhite.king.CheckQueensideCastle(chessState))
+        // {
+        //     toReturn += "Q";
+        //     hasEncodedCastlingRights = true;
+        // }
+        // if (chessState.playerWhite.king.CheckKingsideCastle(chessState))
+        // {
+        //     toReturn += "k";
+        //     hasEncodedCastlingRights = true;
+        // }
+        // if (chessState.playerWhite.king.CheckQueensideCastle(chessState))
+        // {
+        //     toReturn += "q";
+        //     hasEncodedCastlingRights = true;
+        // }
+        // if (!hasEncodedCastlingRights)
+        // {
+        //     toReturn += "-";
+        // }
+
+        // toReturn += " ";
+
+        // encode enpassant
+
+        // for (var piece in )
+        // {
+
+        // }
+
+        return toReturn;
+    }
+
+    public static string EncodeBoardState(ChessSquare[,] boardState)
+    {
+        string toReturn="";
+        for (int y = 7; y >= 0; y--)
+        {
+            toReturn += EncodeRank(boardState, y);
+        }
+        return toReturn;
+    }
+
+    private static string EncodeRank(ChessSquare[,] boardState, int rank)
+    {
+        string toReturn = "";
+        int runningEmptySpaces=0;
+        for (int x = 0; x < 8; x++)
+        {
+            if (!boardState[x, rank].containsPiece)
+            {
+                runningEmptySpaces++;
+                continue;
+            }
+            if (runningEmptySpaces > 0)
+            {
+                toReturn += (char) ('0' + runningEmptySpaces);
+            }
+            char pieceSymbol = Piece.pieceToChar[boardState[x, rank].piece.pieceType];
+            
+            if (boardState[x, rank].piece.playerType == PlayerType.Black)
+            {
+                pieceSymbol = Char.ToLower(pieceSymbol);
+            }
+            
+            toReturn += pieceSymbol;
+            runningEmptySpaces=0;
+        }
+        if (runningEmptySpaces > 0)
+        {
+            toReturn += (char) ('0' + runningEmptySpaces);
+        }
+        return toReturn;
     }
 
 
