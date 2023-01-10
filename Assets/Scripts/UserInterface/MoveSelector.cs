@@ -6,6 +6,7 @@ using UnityEngine.Tilemaps;
 [RequireComponent(typeof(Tilemap))]
 public class MoveSelector : MonoBehaviour
 {
+    public static MoveSelector instance;
     public Piece selectedPiece;
     public Tilemap tileGrid {get; private set;}
     public GameObject legalMovePrefab;
@@ -21,6 +22,14 @@ public class MoveSelector : MonoBehaviour
 
     void Awake()
     {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(this);
+        }
         tileGrid = GetComponentInChildren<Tilemap>();
         EventManager.instance.PawnPromotionStarted += StartPawnPromotion;
         EventManager.instance.PawnPromotionEnded += StopPawnPromotion;

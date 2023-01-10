@@ -6,11 +6,9 @@ using UnityEngine;
 public class HumanPlayer : ChessPlayer {
 
     private OptionalMove moveChosen;
-    private MoveSelector moveSelector;
     
-    public HumanPlayer(PlayerType playerType, MoveSelector moveSelector) : base(playerType)
+    public HumanPlayer(PlayerType playerType) : base(playerType)
     {
-        this.moveSelector = moveSelector;
         this.moveChosen = new OptionalMove();
         EventManager.instance.PlayerMoveOccurred += MoveChosen;
         EventManager.instance.TurnEnded += TurnEnded;
@@ -31,7 +29,7 @@ public class HumanPlayer : ChessPlayer {
 
     public override OptionalMove GetMove(ChessState chessState)
     {
-        moveSelector.CheckUserInput(chessState);
+        MoveSelector.instance.CheckUserInput(chessState);
         return moveChosen;
     }
 }

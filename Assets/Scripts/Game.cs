@@ -4,10 +4,9 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
-
     public static string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     bool isGameActive;
-    private MoveSelector moveSelector;
+    bool isWaiting;
     
     public Board board;
     public ChessState chessState;
@@ -25,7 +24,6 @@ public class Game : MonoBehaviour
     
     private void Awake()
     {
-        moveSelector = GetComponentInChildren<MoveSelector>();
         pieceManager = GetComponentInChildren<PieceManager>();
     }
 
@@ -40,15 +38,16 @@ public class Game : MonoBehaviour
     }
 
     private void InitializeGame(){
-        playerWhite = new HumanPlayer(PlayerType.White, moveSelector);
+        playerWhite = new HumanPlayer(PlayerType.White);
         playerBlack = new RandomPlayer(PlayerType.Black);
         DrawBoard();
+        isWaiting = false;
         isGameActive = true;
     }
 
     private void Update()
     {
-        if (isGameActive)
+        if (isGameActive && !isWaiting)
         {
             OptionalMove move;
             if (chessState.activePlayer.playerType == PlayerType.White)
