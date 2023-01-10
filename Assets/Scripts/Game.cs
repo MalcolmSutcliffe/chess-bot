@@ -43,8 +43,8 @@ public class Game : MonoBehaviour
     }
 
     private void InitializeGame(){
-        playerWhite = new CCCPPlayer(PlayerType.White);
-        playerBlack = new RandomPlayer(PlayerType.Black);
+        playerWhite = new HumanPlayer(PlayerType.White);
+        playerBlack = new MaterialisticMinMaxPlayer(PlayerType.Black, 2);
         DrawBoard();
         isGameActive = true;
     }
@@ -71,15 +71,14 @@ public class Game : MonoBehaviour
             {
                 return;
             }
+            print(Move.EncodeMoveSAN(move.move, chessState));
             MoveOccured(move.move);
             EventManager.instance.OnTurnEnded();
         }
     }
 
     public void MoveOccured(Move move)
-    {
-        print(Move.EncodeMoveSAN(move, chessState));
-        
+    {  
         chessState.MovePiece(move);
         
         DrawBoard();
