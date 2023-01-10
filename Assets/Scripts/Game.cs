@@ -6,7 +6,6 @@ public class Game : MonoBehaviour
 {
     public static string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     bool isGameActive;
-    bool isWaiting;
     
     public Board board;
     public ChessState chessState;
@@ -41,28 +40,33 @@ public class Game : MonoBehaviour
         playerWhite = new HumanPlayer(PlayerType.White);
         playerBlack = new RandomPlayer(PlayerType.Black);
         DrawBoard();
-        isWaiting = false;
         isGameActive = true;
     }
 
     private void Update()
     {
-        if (isGameActive && !isWaiting)
+        if (isGameActive)
         {
             OptionalMove move;
             if (chessState.activePlayer.playerType == PlayerType.White)
             {
-                move = playerWhite.GetMove(chessState);
+                move = playerWhite.GetMove(chessState.DeepCopy());
             }
             else
             {
-                move = playerBlack.GetMove(chessState);
+                move = playerBlack.GetMove(chessState.DeepCopy());
             }
-            if (move.containsMove)
+            // check if move was returned
+            if (!move.containsMove)
             {
-                MoveOccured(move.move);
-                EventManager.instance.OnTurnEnded();
+                return;
             }
+            if (!chessState.GetLegalMoves().Contains(move.move))
+            {
+                return;
+            }
+            MoveOccured(move.move);
+            EventManager.instance.OnTurnEnded();
         }
     }
 

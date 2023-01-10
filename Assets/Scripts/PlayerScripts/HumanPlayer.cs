@@ -29,7 +29,7 @@ public class HumanPlayer : ChessPlayer {
 
     public override OptionalMove GetMove(ChessState chessState)
     {
-        MoveSelector.instance.CheckUserInput(chessState);
+        MoveSelector.instance.CheckUserInput(chessState, playerType);
         return moveChosen;
     }
 }

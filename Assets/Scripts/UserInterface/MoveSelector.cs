@@ -53,7 +53,7 @@ public class MoveSelector : MonoBehaviour
         pawnPromotionMenu.SetActive(false);
     }
 
-    public void CheckUserInput(ChessState chessState)
+    public void CheckUserInput(ChessState chessState, PlayerType playerType)
     {
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int tilePos = tileGrid.WorldToCell(worldPos);
@@ -68,15 +68,15 @@ public class MoveSelector : MonoBehaviour
         {
             return;
         }
-        
-        if (selectedPiece != null)
-        {
-            if (!chessState.IsInBoard(new int[] {tilePos.x, tilePos.y}))
+
+        if (!chessState.IsInBoard(new int[] {tilePos.x, tilePos.y}))
             {
                 Unselect();
                 return;
             }
-            
+        
+        if (selectedPiece != null)
+        {
             List<Move> legalMoves = selectedPiece.GetLegalMoves(chessState);
             
             foreach (var m in legalMoves)
@@ -90,7 +90,7 @@ public class MoveSelector : MonoBehaviour
                     }
                     else
                     {
-                        EventManager.instance.OnPlayerMoveOccured(m, chessState.activePlayer.playerType);
+                        EventManager.instance.OnPlayerMoveOccured(m, playerType);
                     }
                     Unselect();
                     return;
@@ -116,7 +116,7 @@ public class MoveSelector : MonoBehaviour
             return;
         }
         
-        if (!(chessState.boardState[tilePos.x, tilePos.y].piece.playerType == chessState.activePlayer.playerType))
+        if (!(chessState.boardState[tilePos.x, tilePos.y].piece.playerType == playerType))
         {
             Unselect();
             return;
