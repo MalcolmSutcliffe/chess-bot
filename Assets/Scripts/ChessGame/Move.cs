@@ -370,4 +370,5 @@ public class Move{
     {
         return (int) this.hashID;
     }
+    
 }

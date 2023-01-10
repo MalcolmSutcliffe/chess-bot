@@ -5,6 +5,12 @@ using UnityEngine;
 public class Game : MonoBehaviour
 {
     public static string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+    public static Dictionary<PlayerType, PlayerType> otherPlayer = new Dictionary<PlayerType, PlayerType>{
+        {PlayerType.White, PlayerType.Black},
+        {PlayerType.Black, PlayerType.White}
+    };
+    
     bool isGameActive;
     
     public Board board;
@@ -37,7 +43,7 @@ public class Game : MonoBehaviour
     }
 
     private void InitializeGame(){
-        playerWhite = new HumanPlayer(PlayerType.White);
+        playerWhite = new CCCPPlayer(PlayerType.White);
         playerBlack = new RandomPlayer(PlayerType.Black);
         DrawBoard();
         isGameActive = true;
