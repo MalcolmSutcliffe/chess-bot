@@ -85,26 +85,39 @@ public class King : Piece
         
     }
 
+    public bool CheckKingsideCastle(ChessState chessState)
+    {
+        // castling rights
+        if (!KingSideCastlingRights(chessState))
+        {
+            return false;
+        }
+        
+        // check empty squares
+        for (int i = 1; i < 3; i++)
+        {
+            if (chessState.boardState[position[0] + i, position[1]].containsPiece)
+            {
+                return false;
+            }
+        }
+
+        // check no checks
+        for (int i = 1; i < 2; i++)
+        {
+            if (chessState.IsKingInCheck(this.playerType, new int[] {position[0] + i, position[1]}))
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
     public bool CheckQueensideCastle(ChessState chessState)
     {
-        if (!chessState.boardState[position[0] -4, position[1]].containsPiece)
-        {
-            return false;
-        }
-
-        if (!(chessState.boardState[position[0] -4, position[1]].piece.playerType == this.playerType))
-        {
-            return false;
-        }
-        
-        if (!(chessState.boardState[position[0] -4, position[1]].piece.pieceType == PieceType.Rook))
-        {
-            return false;
-        }
-
-        Rook leftRook = (Rook) chessState.boardState[position[0] -4, position[1]].piece;
-        
-        if (!leftRook.castlingRights)
+        // castling rights
+        if (!QueenSideCastlingRights(chessState))
         {
             return false;
         }
@@ -130,8 +143,13 @@ public class King : Piece
         return true;
     }
 
-    public bool CheckKingsideCastle(ChessState chessState)
+    public bool KingSideCastlingRights(ChessState chessState)
     {
+        if (!castlingRights)
+        {
+            return false;
+        }
+        // check rook
         if (!chessState.boardState[position[0] +3, position[1]].containsPiece)
         {
             return false;
@@ -153,25 +171,36 @@ public class King : Piece
         {
             return false;
         }
+        return true;
+    }
 
-        // check empty squares
-        for (int i = 1; i < 3; i++)
+    public bool QueenSideCastlingRights(ChessState chessState)
+    {
+        if (!castlingRights)
         {
-            if (chessState.boardState[position[0] + i, position[1]].containsPiece)
-            {
-                return false;
-            }
+            return false;
+        }
+        if (!chessState.boardState[position[0] -4, position[1]].containsPiece)
+        {
+            return false;
         }
 
-        // check no checks
-        for (int i = 1; i < 2; i++)
+        if (!(chessState.boardState[position[0] -4, position[1]].piece.playerType == this.playerType))
         {
-            if (chessState.IsKingInCheck(this.playerType, new int[] {position[0] + i, position[1]}))
-            {
-                return false;
-            }
+            return false;
         }
         
+        if (!(chessState.boardState[position[0] -4, position[1]].piece.pieceType == PieceType.Rook))
+        {
+            return false;
+        }
+
+        Rook leftRook = (Rook) chessState.boardState[position[0] -4, position[1]].piece;
+        
+        if (!leftRook.castlingRights)
+        {
+            return false;
+        }
         return true;
     }
 

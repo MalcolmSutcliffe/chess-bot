@@ -10,7 +10,7 @@ public enum PlayerType{
 public class Player{
     public PlayerType playerType {get; private set;}
     public List<Piece> pieces {get; private set;}
-    public Piece king {get; private set;}
+    public King king {get; private set;}
 
     public Player(PlayerType playerType)
     {
@@ -29,7 +29,7 @@ public class Player{
         {
             if (this.king == null)
             {
-                this.king = piece;
+                this.king =  (King) piece;
             } else
             {
                 throw new ArgumentException("Error: Player cannot have 2 kings");

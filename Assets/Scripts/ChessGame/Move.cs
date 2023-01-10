@@ -295,7 +295,7 @@ public class Move {
         return new Move(pieceType, fromPos, toPos, capturePiece, promotePiece, promotedTo);
     }
 
-    private static string positionToChessNotation(int[] position)
+    public static string positionToChessNotation(int[] position)
     {
         return "" + positionXToFile(position[0]) + positionYToRank(position[1]);
     }

@@ -6,13 +6,14 @@ public class ChessState{
     public ChessSquare[,] boardState {get; private set;}
     public int size {get; private set;}
     public int[][] previousMove {get; private set;}
-    public int halfClock; // time since last capture or pawn move used for draws
-    public Dictionary<string, int> stateHistory;
+    public int halfClock {get; private set;} // time since last capture or pawn move used for draws
+    public int fullMoveCount {get; private set;}
+    public Dictionary<string, int> stateHistory {get; private set;}
     
-    public Player playerWhite;
-    public Player playerBlack;
+    public Player playerWhite {get; private set;}
+    public Player playerBlack {get; private set;}
 
-    public Player activePlayer;
+    public Player activePlayer {get; private set;}
     
     public ChessState(int size) 
     {
@@ -25,6 +26,7 @@ public class ChessState{
         this.activePlayer = this.playerWhite;
 
         this.halfClock = 0;
+        this.fullMoveCount = 0;
 
         this.stateHistory = new Dictionary<string, int>();
         
@@ -182,6 +184,7 @@ public class ChessState{
         else if (activePlayer.playerType == PlayerType.Black)
         {
             this.activePlayer = this.playerWhite;
+            this.fullMoveCount++;
         }
     }
 
@@ -272,41 +275,45 @@ public class ChessState{
 
         toReturn += " ";
         
-        //encode castling rights
-        // bool hasEncodedCastlingRights = false;
-        // if (chessState.playerWhite.king.CheckKingsideCastle(chessState))
-        // {
-        //     toReturn += "K";
-        //     hasEncodedCastlingRights = true;
-        // }
-        // if (chessState.playerWhite.king.CheckQueensideCastle(chessState))
-        // {
-        //     toReturn += "Q";
-        //     hasEncodedCastlingRights = true;
-        // }
-        // if (chessState.playerWhite.king.CheckKingsideCastle(chessState))
-        // {
-        //     toReturn += "k";
-        //     hasEncodedCastlingRights = true;
-        // }
-        // if (chessState.playerWhite.king.CheckQueensideCastle(chessState))
-        // {
-        //     toReturn += "q";
-        //     hasEncodedCastlingRights = true;
-        // }
-        // if (!hasEncodedCastlingRights)
-        // {
-        //     toReturn += "-";
-        // }
+        // encode castling rights
+        bool hasEncodedCastlingRights = false;
+        if (chessState.playerWhite.king.KingSideCastlingRights(chessState))
+        {
+            toReturn += "K";
+            hasEncodedCastlingRights = true;
+        }
+        if (chessState.playerWhite.king.QueenSideCastlingRights(chessState))
+        {
+            toReturn += "Q";
+            hasEncodedCastlingRights = true;
+        }
+        if (chessState.playerBlack.king.KingSideCastlingRights(chessState))
+        {
+            toReturn += "k";
+            hasEncodedCastlingRights = true;
+        }
+        if (chessState.playerBlack.king.QueenSideCastlingRights(chessState))
+        {
+            toReturn += "q";
+            hasEncodedCastlingRights = true;
+        }
+        if (!hasEncodedCastlingRights)
+        {
+            toReturn += "-";
+        }
 
-        // toReturn += " ";
+        toReturn += " ";
 
         // encode enpassant
+        toReturn += GetEnPasantSquare(chessState);
 
-        // for (var piece in )
-        // {
+        toReturn += " ";
 
-        // }
+        toReturn += chessState.halfClock.ToString();
+        
+        toReturn += " ";
+
+        toReturn += chessState.fullMoveCount.ToString();
 
         return toReturn;
     }
@@ -317,6 +324,10 @@ public class ChessState{
         for (int y = 7; y >= 0; y--)
         {
             toReturn += EncodeRank(boardState, y);
+            if (y > 0)
+            {
+                toReturn += "/";
+            }
         }
         return toReturn;
     }
@@ -351,6 +362,25 @@ public class ChessState{
             toReturn += (char) ('0' + runningEmptySpaces);
         }
         return toReturn;
+    }
+
+    private static string GetEnPasantSquare(ChessState chessState)
+    {
+        int[] previousMoveFrom = chessState.previousMove[0];
+        int[] previousMoveTo = chessState.previousMove[1];
+        if (!chessState.boardState[previousMoveTo[0], previousMoveTo[1]].containsPiece)
+        {
+            return "-";
+        }
+        if (chessState.boardState[previousMoveTo[0], previousMoveTo[1]].piece.pieceType != PieceType.Pawn)
+        {
+            return "-";
+        }
+        if (Math.Abs(previousMoveFrom[1] - previousMoveTo[1]) < 2)
+        {
+            return "-";
+        }
+        return Move.positionToChessNotation(new int[] {previousMoveTo[0], (int) ((previousMoveFrom[1] + previousMoveTo[1])/2)});
     }
 
 

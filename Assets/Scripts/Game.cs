@@ -75,7 +75,7 @@ public class Game : MonoBehaviour
 
         print(Move.EncodeMoveSAN(move, chessState));
         chessState.MovePiece(move);
-        print(ChessState.EncodeBoardState(chessState.boardState));
+        print(ChessState.EncodeChessStateFEN(chessState));
 
         DrawBoard();
         
