@@ -317,7 +317,7 @@ public class Move {
         return (char) ('1' + y);
     }
 
-    private static int[] chessNotationToPosition(string chessNotation)
+    public static int[] chessNotationToPosition(string chessNotation)
     {
         if (chessNotation.Length != 2)
         {

@@ -1,3 +1,8 @@
+using System;
+using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
+
 public class BoardEncoder
 {
     public static string EncodeChessStateToFEN(ChessState chessState)

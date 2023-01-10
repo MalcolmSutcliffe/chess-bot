@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-// using UnityEngine;
+using UnityEngine;
 public class ChessState{
     public ChessSquare[,] boardState {get; private set;}
     public int size {get; private set;}
@@ -26,7 +26,7 @@ public class ChessState{
         this.activePlayer = this.playerWhite;
 
         this.halfClock = 0;
-        this.fullMoveCount = 0;
+        this.fullMoveCount = 1;
 
         this.stateHistory = new Dictionary<string, int>();
         
@@ -47,15 +47,27 @@ public class ChessState{
         this.playerWhite = new Player(PlayerType.White);
         this.playerBlack = new Player(PlayerType.Black);
 
+        this.stateHistory = new Dictionary<string, int>();
+
+        for (int x = 0; x < size; x++)
+        {
+            for (int y = 0; y < size; y++)
+            {
+                this.boardState[x,y] = new ChessSquare();
+            }
+        }
+
         int curFile = 0;
         int curRank = 7;
         
-        // decode board state
+        // Add pieces
         foreach(char c in fenChessState)
         {
+            // decode board state
             if (c == ' ')
+            {
                 break;
-            
+            }
             if (c == '/')
             {
                 curRank--;
@@ -67,20 +79,140 @@ public class ChessState{
             {
                 // add blank squares
                 int numBlanks = c - '0';
-                for (int i = 0; i < numBlanks; i++)
-                {
-                    boardState[curFile+i, curRank] = new ChessSquare();
-                }
-                curFile = curFile + numBlanks + 1;
+                curFile = curFile + numBlanks;
                 continue;
             }
             
-            PieceType pieceType;
-            PlayerType playerType;
+            // add piece
+            PlayerType playerType = PlayerType.White;
+            if ('a' <= c && c <= 'z')
+            {
+                playerType = PlayerType.Black;
+            }
+            PieceType pieceType = Piece.charToPiece[Char.ToUpper(c)];
             int[] position = new int[] {curFile, curRank};
-            // if ()
-        } 
+
+            this.AddPiece(position, playerType, pieceType);
+            curFile++;
+        }
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        // decode active colour
+        if (fenChessState[0] == 'w')
+        {
+            this.activePlayer = playerWhite;
+        }
+        else if (fenChessState[0] == 'b')
+        {
+            this.activePlayer = playerBlack;
+        }
+        else
+        {
+            throw new ArgumentException("invalid FEN string - current player move");
+        }
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        // decode castling rights
+        bool whiteKingCastle= false;
+        bool whiteQueenCastle = false;
+        bool blackKingCastle = false;
+        bool blackQueenCastle = false;
+        foreach (char c in fenChessState)
+        {
+            if (c == ' ' || c == '-')
+            {
+                break;
+            }
+            else if (c == 'K')
+            {
+                whiteKingCastle = true;
+            }
+            else if (c == 'Q')
+            {
+                whiteQueenCastle = true;
+            }
+            else if (c == 'k')
+            {
+                blackKingCastle = true;
+            }
+            else if (c == 'q')
+            {
+                whiteQueenCastle = true;
+            }
+            else
+            {
+                throw new ArgumentException("invalid FEN string - castle rights");
+            }
+        }
+        if (!whiteKingCastle)
+        {
+            // get rook and send info
+            if(this.boardState[7,0].containsPiece && this.boardState[7,0].piece.playerType == PlayerType.White && this.boardState[7,0].piece.pieceType == PieceType.Rook)
+            {
+                Rook rook = (Rook) boardState[7,0].piece;
+                rook.castlingRights = false;
+            }
+        }
+        if (!whiteQueenCastle)
+        {
+            // get rook and send info
+            if(this.boardState[0,0].containsPiece && this.boardState[0,0].piece.playerType == PlayerType.White && this.boardState[0,0].piece.pieceType == PieceType.Rook)
+            {
+                Rook rook = (Rook) boardState[0,0].piece;
+                rook.castlingRights = false;
+            }
+        }
+        if (!blackKingCastle)
+        {
+            // get rook and send info
+            if(this.boardState[7,7].containsPiece && this.boardState[7,0].piece.playerType == PlayerType.Black && this.boardState[7,7].piece.pieceType == PieceType.Rook)
+            {
+                Rook rook = (Rook) boardState[7,7].piece;
+                rook.castlingRights = false;
+            }
+        }
+        if (!blackQueenCastle)
+        {
+            // get rook and send info
+            if(this.boardState[0,7].containsPiece && this.boardState[0,0].piece.playerType == PlayerType.Black && this.boardState[0,7].piece.pieceType == PieceType.Rook)
+            {
+                Rook rook = (Rook) boardState[0,7].piece;
+                rook.castlingRights = false;
+            }
+        }
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        // decode enPassant
+        if (fenChessState[0] != '-')
+        {
+            int[] enPassantPosition = Move.chessNotationToPosition(fenChessState.Substring(0,2));
+            
+            if (enPassantPosition[1] == 2)
+            {
+                this.previousMove = new int[][] { new int [] {enPassantPosition[0], 1}, new int[] {enPassantPosition[0], 3}};
+            }
+            else if (enPassantPosition[1] == 5)
+            {
+                this.previousMove = new int[][] { new int [] {enPassantPosition[0], 6}, new int[] {enPassantPosition[0], 4}};
+            }
+            else
+            {
+                throw new ArgumentException("invalid FEN string - en passant targets");
+            }
+        }
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        this.halfClock = Int32.Parse(fenChessState.Substring(0, fenChessState.IndexOf(' ')));
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        this.fullMoveCount = Int32.Parse(fenChessState);
     }
+
     
     public void MovePiece(Move move)
     {

@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
+
+    public static string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     bool isGameActive;
     
     public Board board;
@@ -30,7 +32,7 @@ public class Game : MonoBehaviour
         EventManager.instance.MoveOccured += MoveOccured;
         previousMoveHighlights = new GameObject[2];
         board.DrawGrid(size);
-        chessState = new ChessState(size);
+        chessState = new ChessState(STARTING_POSITION);
 
         InitializeGame();
     }
@@ -43,30 +45,6 @@ public class Game : MonoBehaviour
 
     private void InitializeGame(){
         isGameActive = true;
-
-        // set board to default value
-        chessState.AddPiece(new int[] {0, 0}, PlayerType.White, PieceType.Rook);
-        chessState.AddPiece(new int[] {7, 0}, PlayerType.White, PieceType.Rook);
-        chessState.AddPiece(new int[] {1, 0}, PlayerType.White, PieceType.Knight);
-        chessState.AddPiece(new int[] {6, 0}, PlayerType.White, PieceType.Knight);
-        chessState.AddPiece(new int[] {2, 0}, PlayerType.White, PieceType.Bishop);
-        chessState.AddPiece(new int[] {5, 0}, PlayerType.White, PieceType.Bishop);
-        chessState.AddPiece(new int[] {3, 0}, PlayerType.White, PieceType.Queen);
-        chessState.AddPiece(new int[] {4, 0}, PlayerType.White, PieceType.King);
-        for (int y = 0; y < size; y++)
-            chessState.AddPiece(new int[] {y, 1}, PlayerType.White, PieceType.Pawn);
-        
-        chessState.AddPiece(new int[] {0, 7}, PlayerType.Black, PieceType.Rook);
-        chessState.AddPiece(new int[] {7, 7}, PlayerType.Black, PieceType.Rook);
-        chessState.AddPiece(new int[] {1, 7}, PlayerType.Black, PieceType.Knight);
-        chessState.AddPiece(new int[] {6, 7}, PlayerType.Black, PieceType.Knight);
-        chessState.AddPiece(new int[] {2, 7}, PlayerType.Black, PieceType.Bishop);
-        chessState.AddPiece(new int[] {5, 7}, PlayerType.Black, PieceType.Bishop);
-        chessState.AddPiece(new int[] {3, 7}, PlayerType.Black, PieceType.Queen);
-        chessState.AddPiece(new int[] {4, 7}, PlayerType.Black, PieceType.King);
-        for (int y = 0; y < size; y++)
-            chessState.AddPiece(new int[] {y, 6}, PlayerType.Black, PieceType.Pawn);
-        
         DrawBoard();
     }
 
