@@ -1,19 +1,21 @@
 using System;
-using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-// using UnityEngine;
+using UnityEngine;
 public class ChessState{
     public ChessSquare[,] boardState {get; private set;}
     public int size {get; private set;}
     public int[][] previousMove {get; private set;}
+    public int halfClock {get; private set;} // time since last capture or pawn move used for draws
+    public int fullMoveCount {get; private set;}
+    public Dictionary<string, int> stateHistory {get; private set;}
     
-    public Player playerWhite;
-    public Player playerBlack;
+    public Player playerWhite {get; private set;}
+    public Player playerBlack {get; private set;}
 
-    public Player activePlayer;
+    public Player activePlayer {get; private set;}
     
-    public ChessState(int size) 
+    public ChessState(int size=8) 
     {
         this.size = size;
         this.boardState = new ChessSquare[size,size];
@@ -22,6 +24,11 @@ public class ChessState{
         this.playerBlack = new Player(PlayerType.Black);
 
         this.activePlayer = this.playerWhite;
+
+        this.halfClock = 0;
+        this.fullMoveCount = 1;
+
+        this.stateHistory = new Dictionary<string, int>();
         
         for (int x = 0; x < size; x++)
         {
@@ -31,6 +38,181 @@ public class ChessState{
             }
         }
     }
+
+    public ChessState(string fenChessState)
+    {
+        this.size = 8;
+        this.boardState = new ChessSquare[size,size];
+
+        this.playerWhite = new Player(PlayerType.White);
+        this.playerBlack = new Player(PlayerType.Black);
+
+        this.stateHistory = new Dictionary<string, int>();
+
+        for (int x = 0; x < size; x++)
+        {
+            for (int y = 0; y < size; y++)
+            {
+                this.boardState[x,y] = new ChessSquare();
+            }
+        }
+
+        int curFile = 0;
+        int curRank = 7;
+        
+        // Add pieces
+        foreach(char c in fenChessState)
+        {
+            // decode board state
+            if (c == ' ')
+            {
+                break;
+            }
+            if (c == '/')
+            {
+                curRank--;
+                curFile = 0;
+                continue;
+            }
+            
+            if ('1' <= c && c <= '8')
+            {
+                // add blank squares
+                int numBlanks = c - '0';
+                curFile = curFile + numBlanks;
+                continue;
+            }
+            
+            // add piece
+            PlayerType playerType = PlayerType.White;
+            if ('a' <= c && c <= 'z')
+            {
+                playerType = PlayerType.Black;
+            }
+            PieceType pieceType = Piece.charToPiece[Char.ToUpper(c)];
+            int[] position = new int[] {curFile, curRank};
+
+            this.AddPiece(position, playerType, pieceType);
+            curFile++;
+        }
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        // decode active colour
+        if (fenChessState[0] == 'w')
+        {
+            this.activePlayer = playerWhite;
+        }
+        else if (fenChessState[0] == 'b')
+        {
+            this.activePlayer = playerBlack;
+        }
+        else
+        {
+            throw new ArgumentException("invalid FEN string - current player move");
+        }
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        // decode castling rights
+        bool whiteKingCastle= false;
+        bool whiteQueenCastle = false;
+        bool blackKingCastle = false;
+        bool blackQueenCastle = false;
+        foreach (char c in fenChessState)
+        {
+            if (c == ' ' || c == '-')
+            {
+                break;
+            }
+            else if (c == 'K')
+            {
+                whiteKingCastle = true;
+            }
+            else if (c == 'Q')
+            {
+                whiteQueenCastle = true;
+            }
+            else if (c == 'k')
+            {
+                blackKingCastle = true;
+            }
+            else if (c == 'q')
+            {
+                whiteQueenCastle = true;
+            }
+            else
+            {
+                throw new ArgumentException("invalid FEN string - castle rights");
+            }
+        }
+        if (!whiteKingCastle)
+        {
+            // get rook and send info
+            if(this.boardState[7,0].containsPiece && this.boardState[7,0].piece.playerType == PlayerType.White && this.boardState[7,0].piece.pieceType == PieceType.Rook)
+            {
+                Rook rook = (Rook) boardState[7,0].piece;
+                rook.castlingRights = false;
+            }
+        }
+        if (!whiteQueenCastle)
+        {
+            // get rook and send info
+            if(this.boardState[0,0].containsPiece && this.boardState[0,0].piece.playerType == PlayerType.White && this.boardState[0,0].piece.pieceType == PieceType.Rook)
+            {
+                Rook rook = (Rook) boardState[0,0].piece;
+                rook.castlingRights = false;
+            }
+        }
+        if (!blackKingCastle)
+        {
+            // get rook and send info
+            if(this.boardState[7,7].containsPiece && this.boardState[7,0].piece.playerType == PlayerType.Black && this.boardState[7,7].piece.pieceType == PieceType.Rook)
+            {
+                Rook rook = (Rook) boardState[7,7].piece;
+                rook.castlingRights = false;
+            }
+        }
+        if (!blackQueenCastle)
+        {
+            // get rook and send info
+            if(this.boardState[0,7].containsPiece && this.boardState[0,0].piece.playerType == PlayerType.Black && this.boardState[0,7].piece.pieceType == PieceType.Rook)
+            {
+                Rook rook = (Rook) boardState[0,7].piece;
+                rook.castlingRights = false;
+            }
+        }
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        // decode enPassant
+        if (fenChessState[0] != '-')
+        {
+            int[] enPassantPosition = Move.chessNotationToPosition(fenChessState.Substring(0,2));
+            
+            if (enPassantPosition[1] == 2)
+            {
+                this.previousMove = new int[][] { new int [] {enPassantPosition[0], 1}, new int[] {enPassantPosition[0], 3}};
+            }
+            else if (enPassantPosition[1] == 5)
+            {
+                this.previousMove = new int[][] { new int [] {enPassantPosition[0], 6}, new int[] {enPassantPosition[0], 4}};
+            }
+            else
+            {
+                throw new ArgumentException("invalid FEN string - en passant targets");
+            }
+        }
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        this.halfClock = Int32.Parse(fenChessState.Substring(0, fenChessState.IndexOf(' ')));
+
+        fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
+
+        this.fullMoveCount = Int32.Parse(fenChessState);
+    }
+
     
     public void MovePiece(Move move)
     {
@@ -46,6 +228,13 @@ public class ChessState{
         }
 
         Piece piece = this.boardState[fromPos[0], fromPos[1]].piece;
+
+        halfClock++;
+
+        if (move.capturePiece || piece.pieceType == PieceType.Pawn)
+        {
+            halfClock = 0;
+        }
 
         // EDGE CASE: castle move (only move where 2 pieces are moved)
         if (this.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.King && Math.Abs(fromPos[0] - toPos[0]) >= 2)
@@ -170,23 +359,42 @@ public class ChessState{
         else if (activePlayer.playerType == PlayerType.Black)
         {
             this.activePlayer = this.playerWhite;
+            this.fullMoveCount++;
         }
     }
 
 
     // returns:
-    //  0 if game is not over
-    //  1 if white wins
-    //  2 if black wins
-    //  3 if draw by stalemate
+    // 0 if game is not over
+    // 1 if white wins
+    // 2 if black wins
+    // 3 if draw by stalemate
+    // 4 if draw by insufficient material
+    // 5 if draw by move limit
+    // 6 if draw by 3-fold repitition
     public int CheckEndGame()
     {
         // check draw by insufficient material
+        if (!CheckSufficientMaterial())
+        {
+            return 4;
+        }
 
         // check draw by move limit
+        if (halfClock >= 100)
+        {
+            return 5;
+        }
 
         // check draw by 3-fold repitition
-
+        string currentState = BoardEncoder.EncodeBoardState(this.boardState);
+        AddBoardStateToHistory(currentState);
+        if (stateHistory[currentState] >= 3)
+        {
+            return 6;
+        }
+           
+        // check for legal moves
         foreach(var piece in activePlayer.pieces)
         {
             if (piece.GetLegalMoves(this).Count > 0)
@@ -205,195 +413,39 @@ public class ChessState{
         return 3;
     }
 
-    public string EncodeMoveSAN(Move move)
+    public bool CheckSufficientMaterial()
     {
-        return "";
+        if (playerWhite.pieces.Count >= 3 || playerBlack.pieces.Count >= 3)
+        {
+            return true;
+        }
+        foreach(var piece in playerWhite.pieces)
+        {
+            if (piece.pieceType == PieceType.Pawn || piece.pieceType == PieceType.Rook || piece.pieceType == PieceType.Queen)
+            {
+                return true;
+            }
+        }
+        foreach(var piece in playerBlack.pieces)
+        {
+            if (piece.pieceType == PieceType.Pawn || piece.pieceType == PieceType.Rook || piece.pieceType == PieceType.Queen)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
-    // take a move in chess standard algebraic notation and convert to a move object
-    // example string : "Ra4a5", "Ra4", "Rha2", "R3d3" b3b4, "c5", "0-0-0" , "h8=Q"
-    // if no start position given, must be determined so the board state is required
-    public Move DecodeMoveSAN(string moveSAN)
+    private void AddBoardStateToHistory(string state)
     {
-        // Edge case king side castle
-        if (moveSAN.Equals("0-0") || moveSAN.Equals("O-O"))
+        if (stateHistory.ContainsKey(state))
         {
-            if (activePlayer.playerType == PlayerType.White)
-                return new Move(PieceType.King, new int[] {4, 0}, new int[] {6, 0}, false, false, PieceType.King);
-            if (activePlayer.playerType == PlayerType.Black)
-                return new Move(PieceType.King, new int[] {4, 7}, new int[] {6, 7}, false, false, PieceType.King);
-        }
-        // Edge case queen side castle
-        if (moveSAN.Equals("0-0-0") || moveSAN.Equals("O-O-O"))
+            stateHistory[state] = stateHistory[state] + 1;
+        } else
         {
-            if (activePlayer.playerType == PlayerType.White)
-                return new Move(PieceType.King, new int[] {4, 0}, new int[] {2, 0}, false, false, PieceType.King);
-            if (activePlayer.playerType == PlayerType.Black)
-                return new Move(PieceType.King, new int[] {4, 7}, new int[] {2, 7}, false, false, PieceType.King);
+            stateHistory[state] = 1;
         }
-        
-        PieceType pieceType;
-        int[] fromPos;
-        int[] toPos;
-        bool capturePiece;
-        bool promotePiece;
-        PieceType promotedTo;
-
-        moveSAN.Replace("-", "");
-
-        // encode piece 
-        if (moveSAN[0] >= 65 && moveSAN[0] <= 90)
-        {
-            pieceType = Move.pieceChars[moveSAN[0]];
-            // remove first char
-            moveSAN.Remove(0, 1);
-        }
-        else
-        {
-            pieceType = PieceType.Pawn;
-        }
-
-        // check capture
-        capturePiece  = moveSAN.Contains("x");
-        moveSAN.Replace("x", "");
-
-        // check promotion
-        promotePiece = moveSAN.Contains("=");
-        if (promotePiece)
-        {
-            promotedTo = Move.pieceChars[moveSAN.Last()];
-            moveSAN.Remove(moveSAN.Length-1, 2);
-        }
-        else
-        {
-            promotedTo = pieceType;
-        }
-
-        // decode positions
-
-        // no original position information given, check all pieces and determine the move
-        if (moveSAN.Length==2)
-        {
-            toPos = Move.chessNotationToPosition(moveSAN);
-            fromPos = new int[] {-1, -1};
-            foreach (var piece in activePlayer.pieces)
-            {
-                if (piece.pieceType != pieceType)
-                {
-                    continue;
-                }
-                
-                foreach (var move in piece.GetLegalMoves(this))
-                {
-                    if (move.toPos[0] == toPos[0] && move.toPos[1] == toPos[1])
-                    {
-                        fromPos = piece.position;
-                        break;
-                    }
-                }
-            }
-            if (fromPos[0] == -1)
-            {
-                // throw error
-                throw new ArgumentException("could not find piece on board with requested legal move");
-            }
-        }
-
-        // only one indicator given
-        else if (moveSAN.Length==3)
-        {
-            toPos = Move.chessNotationToPosition(moveSAN.Substring(1,2));
-            fromPos = new int[] {-1, -1};
-            // given indicator is file
-            if (moveSAN[0] >= 'a' && moveSAN[0] <= 'h')
-            {
-                int file = moveSAN[0] - 'a';
-                
-                foreach (var piece in activePlayer.pieces)
-                {
-                    if (piece.pieceType != pieceType)
-                    {
-                        continue;
-                    }
-
-                    if (piece.position[0] != file)
-                    {
-                        continue;
-                    }
-                    foreach (var move in piece.GetLegalMoves(this))
-                    {
-                        if (move.toPos[0] == toPos[0] && move.toPos[1] == toPos[1])
-                        {
-                            fromPos = piece.position;
-                            break;
-                        }
-                    }
-                }
-                if (fromPos[0] == -1)
-            {
-                // throw error
-                throw new ArgumentException("could not find piece on board with requested legal move");
-            }
-            
-            }
-            
-            // given indicator is rank
-            else if (moveSAN[0] >= '1' && moveSAN[0] <= '8')
-            {
-                int rank = moveSAN[0] - '1';
-                
-                foreach (var piece in activePlayer.pieces)
-                {
-                    if (piece.pieceType != pieceType)
-                    {
-                        continue;
-                    }
-
-                    if (piece.position[1] != rank)
-                    {
-                        continue;
-                    }
-                    foreach (var move in piece.GetLegalMoves(this))
-                    {
-                        if (move.toPos[0] == toPos[0] && move.toPos[1] == toPos[1])
-                        {
-                            fromPos = piece.position;
-                            break;
-                        }
-                    }
-                }
-                if (fromPos[0] == -1)
-            {
-                // throw error
-                throw new ArgumentException("could not find piece on board with requested legal move");
-            }
-            }
-            
-        }
-        // full info given
-        else if (moveSAN.Length==4)
-        {
-            fromPos = Move.chessNotationToPosition(moveSAN.Substring(0,2));
-            toPos = Move.chessNotationToPosition(moveSAN.Substring(2,2));
-        }
-        else
-        {
-            // throw error
-            throw new ArgumentException("illegal move notation!");
-        }
-        
-        // check illegal promotion notation
-        if (pieceType == PieceType.Pawn && (toPos[1] == 7 || toPos[1] == 0))
-        {
-            if (!promotePiece)
-            {
-                throw new ArgumentException("illegal move notation : cannot move pawn to end of board without specifying promotion piece");
-            }
-            
-        }
-        return new Move(pieceType, fromPos, toPos, capturePiece, promotePiece, promotedTo);
     }
-
 
     public void AddPiece(int[] position, PlayerType playerType, PieceType pieceType)
     {

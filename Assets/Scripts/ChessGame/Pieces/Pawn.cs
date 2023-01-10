@@ -64,14 +64,14 @@ public class Pawn : Piece
             // check promotion
             if (IsPromoting(captureLeft))
             {
-                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, true, PieceType.Queen));
-                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, true, PieceType.Knight));
-                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, true, PieceType.Rook));
-                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, true, PieceType.Bishop));
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, true, true, PieceType.Queen));
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, true, true, PieceType.Knight));
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, true, true, PieceType.Rook));
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, true, true, PieceType.Bishop));
             }
             else
             {
-                possibleMoves.Add(new Move(pieceType, position, captureLeft, false, false, pieceType));
+                possibleMoves.Add(new Move(pieceType, position, captureLeft, true, false, pieceType));
             }
         }
         if (CheckCapture(chessState, 1))
@@ -79,14 +79,14 @@ public class Pawn : Piece
             // check promotion
             if (IsPromoting(captureRight))
             {
-                possibleMoves.Add(new Move(pieceType, position, captureRight, false, true, PieceType.Queen));
-                possibleMoves.Add(new Move(pieceType, position, captureRight, false, true, PieceType.Knight));
-                possibleMoves.Add(new Move(pieceType, position, captureRight, false, true, PieceType.Rook));
-                possibleMoves.Add(new Move(pieceType, position, captureRight, false, true, PieceType.Bishop));
+                possibleMoves.Add(new Move(pieceType, position, captureRight, true, true, PieceType.Queen));
+                possibleMoves.Add(new Move(pieceType, position, captureRight, true, true, PieceType.Knight));
+                possibleMoves.Add(new Move(pieceType, position, captureRight, true, true, PieceType.Rook));
+                possibleMoves.Add(new Move(pieceType, position, captureRight, true, true, PieceType.Bishop));
             }
             else
             {
-                possibleMoves.Add(new Move(pieceType, position, captureRight, false, false, pieceType));
+                possibleMoves.Add(new Move(pieceType, position, captureRight, true, false, pieceType));
             }
         }
         
