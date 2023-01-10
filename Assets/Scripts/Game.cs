@@ -31,7 +31,6 @@ public class Game : MonoBehaviour
 
     private void Start()
     {
-        print("asd");
         Camera.main.transform.position = new Vector3(size / 2f, size/ 2f, -10);
         previousMoveHighlights = new GameObject[2];
         board.DrawGrid(size);
@@ -65,15 +64,15 @@ public class Game : MonoBehaviour
                 MoveOccured(move.move);
                 EventManager.instance.OnTurnEnded();
             }
-            
         }
     }
 
     public void MoveOccured(Move move)
     {
         print(Move.EncodeMoveSAN(move, chessState));
+        
         chessState.MovePiece(move);
-
+        
         DrawBoard();
         
         int moveOutcome = chessState.CheckEndGame();
@@ -106,7 +105,7 @@ public class Game : MonoBehaviour
                 print("draw by 3-fold repitition");
                 isGameActive = false;
                 break;
-        }
+        }   
     }
 
     public void DrawBoard()
