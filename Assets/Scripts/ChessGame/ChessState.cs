@@ -395,12 +395,9 @@ public class ChessState{
         }
            
         // check for legal moves
-        foreach(var piece in activePlayer.pieces)
+        if (GetLegalMoves().Count > 0)
         {
-            if (piece.GetLegalMoves(this).Count > 0)
-            {
-                return 0;
-            }
+            return 0;
         }
         
         if (IsKingInCheck(activePlayer.playerType))
@@ -411,6 +408,18 @@ public class ChessState{
                 return 2;
         }
         return 3;
+    }
+
+    public List<Move> GetLegalMoves()
+    {
+        List<Move> legalMoves = new List<Move>();
+
+        foreach(var piece in activePlayer.pieces)
+        {
+            legalMoves.AddRange(piece.GetLegalMoves(this));
+        }
+
+        return legalMoves;
     }
 
     public bool CheckSufficientMaterial()

@@ -7,13 +7,16 @@ public class Game : MonoBehaviour
 
     public static string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     bool isGameActive;
+    private MoveSelector moveSelector;
     
     public Board board;
     public ChessState chessState;
     public int size = 8;
     private PieceManager pieceManager;
-    private MoveSelector moveSelector;
 
+    private ChessPlayer playerWhite;
+    private ChessPlayer playerBlack;
+    
     public GameObject isInCheckPrefab;
     private GameObject isInCheck;
     
@@ -28,8 +31,8 @@ public class Game : MonoBehaviour
 
     private void Start()
     {
+        print("asd");
         Camera.main.transform.position = new Vector3(size / 2f, size/ 2f, -10);
-        EventManager.instance.MoveOccured += MoveOccured;
         previousMoveHighlights = new GameObject[2];
         board.DrawGrid(size);
         chessState = new ChessState(STARTING_POSITION);
@@ -37,20 +40,37 @@ public class Game : MonoBehaviour
         InitializeGame();
     }
 
-    void Update()
-    {
-        if (isGameActive)
-            moveSelector.CheckUserInput(chessState, chessState.activePlayer.playerType);
+    private void InitializeGame(){
+        playerWhite = new HumanPlayer(PlayerType.White, moveSelector);
+        playerBlack = new RandomPlayer(PlayerType.Black);
+        DrawBoard();
+        isGameActive = true;
     }
 
-    private void InitializeGame(){
-        isGameActive = true;
-        DrawBoard();
+    private void Update()
+    {
+        if (isGameActive)
+        {
+            OptionalMove move;
+            if (chessState.activePlayer.playerType == PlayerType.White)
+            {
+                move = playerWhite.GetMove(chessState);
+            }
+            else
+            {
+                move = playerBlack.GetMove(chessState);
+            }
+            if (move.containsMove)
+            {
+                MoveOccured(move.move);
+                EventManager.instance.OnTurnEnded();
+            }
+            
+        }
     }
 
     public void MoveOccured(Move move)
     {
-
         print(Move.EncodeMoveSAN(move, chessState));
         chessState.MovePiece(move);
 

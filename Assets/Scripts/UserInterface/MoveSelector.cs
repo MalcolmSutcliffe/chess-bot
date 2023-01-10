@@ -44,7 +44,7 @@ public class MoveSelector : MonoBehaviour
         pawnPromotionMenu.SetActive(false);
     }
 
-    public void CheckUserInput(ChessState chessState, PlayerType playerMove)
+    public void CheckUserInput(ChessState chessState)
     {
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int tilePos = tileGrid.WorldToCell(worldPos);
@@ -81,7 +81,7 @@ public class MoveSelector : MonoBehaviour
                     }
                     else
                     {
-                        EventManager.instance.OnMoveOccured(m);
+                        EventManager.instance.OnPlayerMoveOccured(m, chessState.activePlayer.playerType);
                     }
                     Unselect();
                     return;
@@ -107,7 +107,7 @@ public class MoveSelector : MonoBehaviour
             return;
         }
         
-        if (!(chessState.boardState[tilePos.x, tilePos.y].piece.playerType == playerMove))
+        if (!(chessState.boardState[tilePos.x, tilePos.y].piece.playerType == chessState.activePlayer.playerType))
         {
             Unselect();
             return;

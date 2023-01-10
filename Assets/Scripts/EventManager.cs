@@ -15,15 +15,21 @@ public class EventManager: MonoBehaviour
         }
     }
 
-    public event Action<Move> MoveOccured;
+    public event Action<Move, PlayerType> PlayerMoveOccurred;
+    public event Action TurnEnded;
     public event Action<int[], int[], bool> PawnPromotionStarted;
     public event Action PawnPromotionEnded;
 
     // more events added here
 
-    public void OnMoveOccured(Move move)
+    public void OnPlayerMoveOccured(Move move, PlayerType playerType)
     {
-        MoveOccured?.Invoke(move);
+        PlayerMoveOccurred?.Invoke(move, playerType);
+    }
+
+    public void OnTurnEnded()
+    {
+        TurnEnded?.Invoke();
     }
 
     public void OnPawnPromotionStarted(int[] fromPos, int[] toPos, bool isCapture)
