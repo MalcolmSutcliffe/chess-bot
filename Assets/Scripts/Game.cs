@@ -4,16 +4,18 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
-
     public static string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     bool isGameActive;
+    bool isWaiting;
     
     public Board board;
     public ChessState chessState;
     public int size = 8;
     private PieceManager pieceManager;
-    private MoveSelector moveSelector;
 
+    private ChessPlayer playerWhite;
+    private ChessPlayer playerBlack;
+    
     public GameObject isInCheckPrefab;
     private GameObject isInCheck;
     
@@ -22,14 +24,12 @@ public class Game : MonoBehaviour
     
     private void Awake()
     {
-        moveSelector = GetComponentInChildren<MoveSelector>();
         pieceManager = GetComponentInChildren<PieceManager>();
     }
 
     private void Start()
     {
         Camera.main.transform.position = new Vector3(size / 2f, size/ 2f, -10);
-        EventManager.instance.MoveOccured += MoveOccured;
         previousMoveHighlights = new GameObject[2];
         board.DrawGrid(size);
         chessState = new ChessState(STARTING_POSITION);
@@ -37,23 +37,41 @@ public class Game : MonoBehaviour
         InitializeGame();
     }
 
-    void Update()
-    {
-        if (isGameActive)
-            moveSelector.CheckUserInput(chessState, chessState.activePlayer.playerType);
+    private void InitializeGame(){
+        playerWhite = new HumanPlayer(PlayerType.White);
+        playerBlack = new RandomPlayer(PlayerType.Black);
+        DrawBoard();
+        isWaiting = false;
+        isGameActive = true;
     }
 
-    private void InitializeGame(){
-        isGameActive = true;
-        DrawBoard();
+    private void Update()
+    {
+        if (isGameActive && !isWaiting)
+        {
+            OptionalMove move;
+            if (chessState.activePlayer.playerType == PlayerType.White)
+            {
+                move = playerWhite.GetMove(chessState);
+            }
+            else
+            {
+                move = playerBlack.GetMove(chessState);
+            }
+            if (move.containsMove)
+            {
+                MoveOccured(move.move);
+                EventManager.instance.OnTurnEnded();
+            }
+        }
     }
 
     public void MoveOccured(Move move)
     {
-
         print(Move.EncodeMoveSAN(move, chessState));
+        
         chessState.MovePiece(move);
-
+        
         DrawBoard();
         
         int moveOutcome = chessState.CheckEndGame();
@@ -86,7 +104,7 @@ public class Game : MonoBehaviour
                 print("draw by 3-fold repitition");
                 isGameActive = false;
                 break;
-        }
+        }   
     }
 
     public void DrawBoard()

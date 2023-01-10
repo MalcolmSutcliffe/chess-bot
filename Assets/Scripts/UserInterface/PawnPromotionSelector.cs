@@ -71,7 +71,7 @@ public class PawnPromotionSelector : MonoBehaviour
         }
         PieceType pieceToSend = selectedPiece;
         selectedPiece = PieceType.Pawn;
-        EventManager.instance.OnMoveOccured(new Move(PieceType.Pawn, fromPos, toPos, isPromotionCapture, true, pieceToSend));
+        EventManager.instance.OnPlayerMoveOccured(new Move(PieceType.Pawn, fromPos, toPos, isPromotionCapture, true, pieceToSend), playerType);
         EventManager.instance.OnPawnPromotionEnded();
     }
 

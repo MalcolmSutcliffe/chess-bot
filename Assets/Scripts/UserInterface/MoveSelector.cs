@@ -6,6 +6,7 @@ using UnityEngine.Tilemaps;
 [RequireComponent(typeof(Tilemap))]
 public class MoveSelector : MonoBehaviour
 {
+    public static MoveSelector instance;
     public Piece selectedPiece;
     public Tilemap tileGrid {get; private set;}
     public GameObject legalMovePrefab;
@@ -21,6 +22,14 @@ public class MoveSelector : MonoBehaviour
 
     void Awake()
     {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(this);
+        }
         tileGrid = GetComponentInChildren<Tilemap>();
         EventManager.instance.PawnPromotionStarted += StartPawnPromotion;
         EventManager.instance.PawnPromotionEnded += StopPawnPromotion;
@@ -44,7 +53,7 @@ public class MoveSelector : MonoBehaviour
         pawnPromotionMenu.SetActive(false);
     }
 
-    public void CheckUserInput(ChessState chessState, PlayerType playerMove)
+    public void CheckUserInput(ChessState chessState)
     {
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int tilePos = tileGrid.WorldToCell(worldPos);
@@ -81,7 +90,7 @@ public class MoveSelector : MonoBehaviour
                     }
                     else
                     {
-                        EventManager.instance.OnMoveOccured(m);
+                        EventManager.instance.OnPlayerMoveOccured(m, chessState.activePlayer.playerType);
                     }
                     Unselect();
                     return;
@@ -107,7 +116,7 @@ public class MoveSelector : MonoBehaviour
             return;
         }
         
-        if (!(chessState.boardState[tilePos.x, tilePos.y].piece.playerType == playerMove))
+        if (!(chessState.boardState[tilePos.x, tilePos.y].piece.playerType == chessState.activePlayer.playerType))
         {
             Unselect();
             return;
