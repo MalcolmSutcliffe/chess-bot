@@ -105,6 +105,10 @@ public class Game : MonoBehaviour
                 print("draw by move limit");
                 isGameActive = false;
                 break;
+            case 6:
+                print("draw by 3-fold repitition");
+                isGameActive = false;
+                break;
         }
     }
 

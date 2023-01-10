@@ -212,7 +212,14 @@ public class ChessState{
         }
 
         // check draw by 3-fold repitition
-
+        string currentState = ChessState.EncodeBoardState(this.boardState);
+        AddBoardStateToHistory(currentState);
+        if (stateHistory[currentState] >= 3)
+        {
+            return 6;
+        }
+           
+        // check for legal moves
         foreach(var piece in activePlayer.pieces)
         {
             if (piece.GetLegalMoves(this).Count > 0)
@@ -252,6 +259,18 @@ public class ChessState{
             }
         }
         return false;
+    }
+
+    private void AddBoardStateToHistory(string state)
+    {
+        if (stateHistory.ContainsKey(state))
+        {
+            stateHistory[state] = stateHistory[state] + 1;
+        } else
+        {
+            stateHistory[state] = 1;
+        }
+
     }
 
     public static string EncodeChessStateFEN(ChessState chessState)
