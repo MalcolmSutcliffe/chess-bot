@@ -28,22 +28,22 @@ public static class BoardEncoder
         
         // encode castling rights
         bool hasEncodedCastlingRights = false;
-        if (chessState.playerWhite.king.KingSideCastlingRights(chessState))
+        if (chessState.playerWhite.king.kingCastlingRights)
         {
             toReturn += "K";
             hasEncodedCastlingRights = true;
         }
-        if (chessState.playerWhite.king.QueenSideCastlingRights(chessState))
+        if (chessState.playerWhite.king.queenCastlingRights)
         {
             toReturn += "Q";
             hasEncodedCastlingRights = true;
         }
-        if (chessState.playerBlack.king.KingSideCastlingRights(chessState))
+        if (chessState.playerBlack.king.kingCastlingRights)
         {
             toReturn += "k";
             hasEncodedCastlingRights = true;
         }
-        if (chessState.playerBlack.king.QueenSideCastlingRights(chessState))
+        if (chessState.playerBlack.king.queenCastlingRights)
         {
             toReturn += "q";
             hasEncodedCastlingRights = true;
@@ -69,7 +69,7 @@ public static class BoardEncoder
         return toReturn;
     }
 
-    public static string EncodeBoardState(ChessSquare[,] boardState)
+    public static string EncodeBoardState(ChessSquare[] boardState)
     {
         string toReturn="";
         for (int y = 7; y >= 0; y--)
@@ -83,13 +83,13 @@ public static class BoardEncoder
         return toReturn;
     }
 
-    private static string EncodeRank(ChessSquare[,] boardState, int rank)
+    private static string EncodeRank(ChessSquare[] boardState, int rank)
     {
         string toReturn = "";
         int runningEmptySpaces=0;
         for (int x = 0; x < 8; x++)
         {
-            if (!boardState[x, rank].containsPiece)
+            if (!boardState[x+rank*8].containsPiece)
             {
                 runningEmptySpaces++;
                 continue;
@@ -98,9 +98,9 @@ public static class BoardEncoder
             {
                 toReturn += (char) ('0' + runningEmptySpaces);
             }
-            char pieceSymbol = Piece.pieceToChar[boardState[x, rank].piece.pieceType];
+            char pieceSymbol = Piece.pieceToChar[boardState[x + rank*8].piece.pieceType];
             
-            if (boardState[x, rank].piece.playerType == PlayerType.Black)
+            if (boardState[x + rank*8].piece.playerType == PlayerType.Black)
             {
                 pieceSymbol = Char.ToLower(pieceSymbol);
             }
@@ -117,20 +117,20 @@ public static class BoardEncoder
 
     private static string GetEnPasantSquare(ChessState chessState)
     {
-        int[] previousMoveFrom = chessState.previousMove[0];
-        int[] previousMoveTo = chessState.previousMove[1];
-        if (!chessState.boardState[previousMoveTo[0], previousMoveTo[1]].containsPiece)
+        int previousMoveFrom = chessState.previousMove[0];
+        int previousMoveTo = chessState.previousMove[1];
+        if (!chessState.boardState[previousMoveTo].containsPiece)
         {
             return "-";
         }
-        if (chessState.boardState[previousMoveTo[0], previousMoveTo[1]].piece.pieceType != PieceType.Pawn)
+        if (chessState.boardState[previousMoveTo].piece.pieceType != PieceType.Pawn)
         {
             return "-";
         }
-        if (Math.Abs(previousMoveFrom[1] - previousMoveTo[1]) < 2)
+        if (Math.Abs(previousMoveFrom - previousMoveTo) < 2)
         {
             return "-";
         }
-        return Move.positionToChessNotation(new int[] {previousMoveTo[0], (int) ((previousMoveFrom[1] + previousMoveTo[1])/2)});
+        return Move.positionToChessNotation(previousMoveTo % 8 + ((previousMoveFrom/8 + previousMoveTo/8)/2));
     }
 }
