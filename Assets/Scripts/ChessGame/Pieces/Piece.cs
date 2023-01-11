@@ -30,9 +30,9 @@ public abstract class Piece
         {PieceType.King, 'K'}, 
     };
     
-    public int position {get; protected set;}
-    public PlayerType playerType {get; protected set;}
-    public PieceType pieceType {get; protected set;}
+    public int position {get; private set;}
+    public PlayerType playerType {get; private set;}
+    public PieceType pieceType {get; private set;}
 
     public Piece(int position, PlayerType playerType, PieceType pieceType){
         this.position = position;

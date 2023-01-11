@@ -495,9 +495,9 @@ public class ChessState{
             newChessState.activePlayer = newChessState.playerBlack; 
         }
         newChessState.playerWhite.king.kingCastlingRights = chessState.playerWhite.king.kingCastlingRights;
-        newChessState.playerWhite.king.queenCastlingRights = chessState.playerWhite.king.kingCastlingRights;
+        newChessState.playerWhite.king.queenCastlingRights = chessState.playerWhite.king.queenCastlingRights;
         newChessState.playerBlack.king.kingCastlingRights = chessState.playerBlack.king.kingCastlingRights;
-        newChessState.playerBlack.king.queenCastlingRights = chessState.playerBlack.king.kingCastlingRights;
+        newChessState.playerBlack.king.queenCastlingRights = chessState.playerBlack.king.queenCastlingRights;
         return newChessState;
     }
 }
