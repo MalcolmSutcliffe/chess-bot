@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 public abstract class SlidingPiece : Piece
 {
-    protected List<int[]> moveDirections;
+    protected int[][] moveDirections;
 
-    public SlidingPiece(int[] position, PlayerType playerType, PieceType pieceType, List<int[]> moveDirections) : base(position, playerType, pieceType)
+    public SlidingPiece(int position, PlayerType playerType, PieceType pieceType, int[][] moveDirections) : base(position, playerType, pieceType)
     {
         this.moveDirections = moveDirections;
     }
@@ -23,13 +23,13 @@ public abstract class SlidingPiece : Piece
     private List<Move> GetPossibleMovesInDirection(ChessState chessState, int[] direction)
     {
         List<Move> possibleMovesInDirection = new List<Move>();
-        int[] move = position;
-        while(chessState.IsInBoard(new int[] {move[0] + direction[0], move[1] + direction[1]} ))
+        int move = position;
+        while(chessState.IsInBoard(move % 8 + direction[0], move/8 + direction[1]))
         {
-            move = new int[] {move[0] + direction[0], move[1] + direction[1]};
-            if (chessState.boardState[move[0], move[1]].containsPiece)
+            move = move + direction[0] + direction[1]*8;
+            if (chessState.boardState[move].containsPiece)
             {
-                if (chessState.boardState[move[0], move[1]].piece.playerType == this.playerType)
+                if (chessState.boardState[move].piece.playerType == this.playerType)
                 {
                     break;
                 }

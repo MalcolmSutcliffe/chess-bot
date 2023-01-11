@@ -55,7 +55,7 @@ public class PawnPromotionSelector : MonoBehaviour
         bishopButton.GetComponent<Image>().sprite = blackBishopSprite;
     }
     
-    public void CheckPromotion(int[] fromPos, int[] toPos, bool isPromotionCapture, PlayerType playerType)
+    public void CheckPromotion(int fromPos, int toPos, bool isPromotionCapture, PlayerType playerType)
     {   
         if (playerType == PlayerType.White)
         {

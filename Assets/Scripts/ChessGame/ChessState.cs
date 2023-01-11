@@ -2,10 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 public class ChessState{
-    public ChessSquare[,] boardState {get; private set;}
-    public int size {get; private set;}
-    public int[][] previousMove {get; private set;}
+    public ChessSquare[] boardState {get; private set;}
+    public int[] previousMove {get; private set;}
     public int halfClock {get; private set;} // time since last capture or pawn move used for draws
     public int fullMoveCount {get; private set;}
     public Dictionary<string, int> stateHistory {get; private set;}
@@ -15,10 +15,9 @@ public class ChessState{
 
     public Player activePlayer {get; private set;}
     
-    public ChessState(int size=8) 
+    public ChessState() 
     {
-        this.size = size;
-        this.boardState = new ChessSquare[size,size];
+        this.boardState = new ChessSquare[64];
 
         this.playerWhite = new Player(PlayerType.White);
         this.playerBlack = new Player(PlayerType.Black);
@@ -30,31 +29,24 @@ public class ChessState{
 
         this.stateHistory = new Dictionary<string, int>();
         
-        for (int x = 0; x < size; x++)
+        for (int x = 0; x < 64; x++)
         {
-            for (int y = 0; y < size; y++)
-            {
-                this.boardState[x,y] = new ChessSquare();
-            }
+            this.boardState[x] = new ChessSquare();
         }
     }
 
     public ChessState(string fenChessState)
     {
-        this.size = 8;
-        this.boardState = new ChessSquare[size,size];
+        this.boardState = new ChessSquare[64];
 
         this.playerWhite = new Player(PlayerType.White);
         this.playerBlack = new Player(PlayerType.Black);
 
         this.stateHistory = new Dictionary<string, int>();
 
-        for (int x = 0; x < size; x++)
+        for (int x = 0; x < 64; x++)
         {
-            for (int y = 0; y < size; y++)
-            {
-                this.boardState[x,y] = new ChessSquare();
-            }
+            this.boardState[x] = new ChessSquare();
         }
 
         int curFile = 0;
@@ -90,7 +82,7 @@ public class ChessState{
                 playerType = PlayerType.Black;
             }
             PieceType pieceType = Piece.charToPiece[Char.ToUpper(c)];
-            int[] position = new int[] {curFile, curRank};
+            int position = curFile + curRank* 8;
 
             this.AddPiece(position, playerType, pieceType);
             curFile++;
@@ -146,57 +138,26 @@ public class ChessState{
                 throw new ArgumentException("invalid FEN string - castle rights");
             }
         }
-        if (!whiteKingCastle)
-        {
-            // get rook and send info
-            if(this.boardState[7,0].containsPiece && this.boardState[7,0].piece.playerType == PlayerType.White && this.boardState[7,0].piece.pieceType == PieceType.Rook)
-            {
-                Rook rook = (Rook) boardState[7,0].piece;
-                rook.castlingRights = false;
-            }
-        }
-        if (!whiteQueenCastle)
-        {
-            // get rook and send info
-            if(this.boardState[0,0].containsPiece && this.boardState[0,0].piece.playerType == PlayerType.White && this.boardState[0,0].piece.pieceType == PieceType.Rook)
-            {
-                Rook rook = (Rook) boardState[0,0].piece;
-                rook.castlingRights = false;
-            }
-        }
-        if (!blackKingCastle)
-        {
-            // get rook and send info
-            if(this.boardState[7,7].containsPiece && this.boardState[7,0].piece.playerType == PlayerType.Black && this.boardState[7,7].piece.pieceType == PieceType.Rook)
-            {
-                Rook rook = (Rook) boardState[7,7].piece;
-                rook.castlingRights = false;
-            }
-        }
-        if (!blackQueenCastle)
-        {
-            // get rook and send info
-            if(this.boardState[0,7].containsPiece && this.boardState[0,0].piece.playerType == PlayerType.Black && this.boardState[0,7].piece.pieceType == PieceType.Rook)
-            {
-                Rook rook = (Rook) boardState[0,7].piece;
-                rook.castlingRights = false;
-            }
-        }
+        this.playerWhite.king.kingCastlingRights = whiteKingCastle;
+        this.playerWhite.king.queenCastlingRights = whiteQueenCastle;
+        this.playerBlack.king.kingCastlingRights = blackKingCastle;
+        this.playerBlack.king.queenCastlingRights = blackQueenCastle;
+        
 
         fenChessState = fenChessState.Remove(0, fenChessState.IndexOf(' ')+ 1);
 
         // decode enPassant
         if (fenChessState[0] != '-')
         {
-            int[] enPassantPosition = Move.chessNotationToPosition(fenChessState.Substring(0,2));
+            int enPassantPosition = Move.chessNotationToPosition(fenChessState.Substring(0,2));
             
-            if (enPassantPosition[1] == 2)
+            if (enPassantPosition / 8 == 2)
             {
-                this.previousMove = new int[][] { new int [] {enPassantPosition[0], 1}, new int[] {enPassantPosition[0], 3}};
+                this.previousMove = new int[] {enPassantPosition - 8, enPassantPosition + 8};
             }
-            else if (enPassantPosition[1] == 5)
+            else if (enPassantPosition/ 8 == 5)
             {
-                this.previousMove = new int[][] { new int [] {enPassantPosition[0], 6}, new int[] {enPassantPosition[0], 4}};
+                this.previousMove = new int[] {enPassantPosition + 8, enPassantPosition - 8};
             }
             else
             {
@@ -216,18 +177,18 @@ public class ChessState{
     
     public void MovePiece(Move move)
     {
-        int[] fromPos = move.fromPos;
-        int[] toPos = move.toPos;
+        int fromPos = move.fromPos;
+        int toPos = move.toPos;
         bool promotePiece = move.promotePiece;
         PieceType promotedTo = move.promotedTo;
 
         // check that position has a piece
-        if (!this.boardState[fromPos[0], fromPos[1]].containsPiece)
+        if (!this.boardState[fromPos].containsPiece)
         {
             return;
         }
 
-        Piece piece = this.boardState[fromPos[0], fromPos[1]].piece;
+        Piece piece = this.boardState[fromPos].piece;
 
         halfClock++;
 
@@ -237,76 +198,81 @@ public class ChessState{
         }
 
         // EDGE CASE: castle move (only move where 2 pieces are moved)
-        if (this.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.King && Math.Abs(fromPos[0] - toPos[0]) >= 2)
+        if (this.boardState[fromPos].piece.pieceType == PieceType.King && Math.Abs(fromPos-toPos) == 2)
         {
-            int[] rookFromPos;
-            int[] rookToPos;
+            int rookFromPos;
+            int rookToPos;
 
             // left castle
-            if ((fromPos[0] - toPos[0]) > 0)
+            if ((fromPos - toPos) > 0)
             {
-                rookFromPos = new int[] {0, fromPos[1]};
-                rookToPos = new int[]{ 3, fromPos[1]};
+                rookFromPos = fromPos-4;
+                rookToPos = toPos + 1;
             }
             //right castle
             else
             {
-                rookFromPos = new int[] {7, fromPos[1]} ;
-                rookToPos = new int[] {5, fromPos[1]};
+                rookFromPos = fromPos+3;
+                rookToPos = toPos-1;
             }
 
-            Piece rookPiece = this.boardState[rookFromPos[0], rookFromPos[1]].piece;
+            Piece rookPiece = this.boardState[rookFromPos].piece;
             
             rookPiece.Move(rookToPos);
-            this.boardState[rookFromPos[0], rookFromPos[1]].RemovePiece();
-            this.boardState[rookToPos[0], rookToPos[1]].SetPiece(rookPiece);
+            this.boardState[rookFromPos].RemovePiece();
+            this.boardState[rookToPos].SetPiece(rookPiece);
         }
 
         // EDGE CASE: en passant
-        if (this.boardState[fromPos[0], fromPos[1]].piece.pieceType == PieceType.Pawn && fromPos[0] != toPos[0] && !this.boardState[toPos[0], toPos[1]].containsPiece)
+        if (piece.pieceType == PieceType.Pawn && fromPos % 8 != toPos % 8 && !this.boardState[toPos].containsPiece)
         {
-            CapturePiece(boardState[toPos[0], fromPos[1]].piece);
+            CapturePiece(toPos % 8 + fromPos / 8);
         }
 
         // if position moving to has piece, remove it
-        if (this.boardState[toPos[0], toPos[1]].containsPiece)
+        if (this.boardState[toPos].containsPiece)
         {
-             CapturePiece(boardState[toPos[0], toPos[1]].piece);
+             CapturePiece(toPos);
         }
 
         // EDGE CASE: pawn promotion
         if (promotePiece)
         {
-            CapturePiece(boardState[fromPos[0], fromPos[1]].piece);
+            CapturePiece(fromPos);
             AddPiece(toPos, activePlayer.playerType, promotedTo);
         }
         else
         {
             // move piece
             piece.Move(toPos);
-            this.boardState[fromPos[0], fromPos[1]].RemovePiece();
-            this.boardState[toPos[0], toPos[1]].SetPiece(piece);
+            this.boardState[fromPos].RemovePiece();
+            this.boardState[toPos].SetPiece(piece);
         }
         
-        this.previousMove = new int[][]{fromPos, toPos};
+        this.previousMove = new int[]{fromPos, toPos};
 
         EndTurn();
     }
 
-    public void CapturePiece(Piece piece)
+    public void CapturePiece(int position)
     {
-        this.boardState[piece.position[0], piece.position[1]].RemovePiece();
+        if (!this.boardState[position].containsPiece)
+        {
+            return;
+        }
+        Piece piece = this.boardState[position].piece;
         if (piece.playerType == PlayerType.White)
         {
-            playerWhite.RemovePiece(piece);
+            playerWhite.RemovePiece(this.boardState[position].piece);
         }
         if (piece.playerType == PlayerType.Black)
         {
-            playerBlack.RemovePiece(piece);
+            playerBlack.RemovePiece(this.boardState[position].piece);
         }
+        this.boardState[position].RemovePiece();
     }
 
-    public int[] GetKingPosition(PlayerType playerType)
+    public int GetKingPosition(PlayerType playerType)
     {
         if (playerType == PlayerType.White)
         {
@@ -316,10 +282,10 @@ public class ChessState{
         {
             return playerBlack.king.position;
         }
-        return new int[] {0, 0};
+        return -1;
     }
 
-    public bool IsKingInCheck(PlayerType playerType, int[] kingPosition = null)
+    public bool IsKingInCheck(PlayerType playerType, int kingPosition = -1)
     {
         List<Piece> piecesToCheck = new List<Piece>();
         
@@ -332,7 +298,7 @@ public class ChessState{
             piecesToCheck = playerWhite.pieces;
         }
 
-        if (kingPosition == null)
+        if (kingPosition == -1)
         {
             kingPosition = GetKingPosition(playerType);
         }
@@ -341,7 +307,7 @@ public class ChessState{
         {
             foreach (var possibleMove in piece.GetPossibleMoves(this))
             {
-                if (possibleMove.toPos[0] == kingPosition[0] && possibleMove.toPos[1] == kingPosition[1])
+                if (possibleMove.toPos == kingPosition)
                     {
                         return true;
                     }
@@ -456,7 +422,7 @@ public class ChessState{
         }
     }
 
-    public void AddPiece(int[] position, PlayerType playerType, PieceType pieceType)
+    public void AddPiece(int position, PlayerType playerType, PieceType pieceType)
     {
         Piece newPiece;
         switch (pieceType)
@@ -483,7 +449,8 @@ public class ChessState{
                 newPiece = new Pawn(position, playerType, pieceType);
                 break;
         }
-        this.boardState[position[0], position[1]].SetPiece(newPiece);
+        
+        this.boardState[position].SetPiece(newPiece);
         
         if (playerType == PlayerType.White)
         {
@@ -496,39 +463,41 @@ public class ChessState{
         }
     }
 
-    public bool IsInBoard(int[] position){
-        return position[0] >= 0 && position[0] < size && position[1] >= 0 && position[1] < size;
+    public bool IsInBoard(int position)
+    {
+        return position >= 0 && position < 64;
     }
 
-    public ChessState DeepCopy()
+    public bool IsInBoard(int positionX, int positionY)
     {
-        ChessState newChessState = new ChessState(size);
-        for (int x = 0; x < size; x++)
+        return positionX >= 0 && positionX < 8 && positionY >= 0 && positionY < 8;
+    }
+
+    public static ChessState DeepCopy(ChessState chessState)
+    {
+        ChessState newChessState = new ChessState();
+        for (int x = 0; x < 64; x++)
         {
-            for (int y = 0; y < size; y++)
+            newChessState.boardState[x] = new ChessSquare();
+            if (!chessState.boardState[x].containsPiece)
             {
-                newChessState.boardState[x,y] = this.boardState[x,y].DeepCopy();
+                continue;
             }
+            newChessState.AddPiece(x, chessState.boardState[x].piece.playerType, chessState.boardState[x].piece.pieceType);
         }
-        for (int x = 0; x < size; x++)
+        
+        if (chessState.activePlayer.playerType == PlayerType.White)
         {
-            for (int y = 0; y < size; y++)
-            {
-                if (!newChessState.boardState[x,y].containsPiece)
-                {
-                    continue;
-                }
-                Piece piece = newChessState.boardState[x,y].piece;
-                if (piece.playerType == PlayerType.White)
-                {
-                    newChessState.playerWhite.AddPiece(piece);
-                }
-                if (piece.playerType == PlayerType.Black)
-                {
-                    newChessState.playerBlack.AddPiece(piece);
-                }
-            }
+            newChessState.activePlayer = newChessState.playerWhite;
+        } 
+        else
+        {
+            newChessState.activePlayer = newChessState.playerBlack; 
         }
+        newChessState.playerWhite.king.kingCastlingRights = chessState.playerWhite.king.kingCastlingRights;
+        newChessState.playerWhite.king.queenCastlingRights = chessState.playerWhite.king.kingCastlingRights;
+        newChessState.playerBlack.king.kingCastlingRights = chessState.playerBlack.king.kingCastlingRights;
+        newChessState.playerBlack.king.queenCastlingRights = chessState.playerBlack.king.kingCastlingRights;
         return newChessState;
     }
 }
