@@ -22,21 +22,10 @@ public abstract class MinMaxPlayer : ChessPlayer {
         // shuffle moves
         legalMoves.Shuffle();
         
-        float bestScore;
         Move bestMove = null;
 
         float alpha = -999;
         float beta = 999;
-        
-        if (maximize)
-        {
-            bestScore = -999;
-        }
-        
-        else
-        {
-            bestScore = 999;
-        }
         
         foreach (var move in legalMoves)
         {
@@ -44,12 +33,12 @@ public abstract class MinMaxPlayer : ChessPlayer {
             ChessState virtualBoard = chessState.DeepCopy();
             virtualBoard.MovePiece(move);
             float moveScore = this.MinMax(virtualBoard, !maximize, 0, alpha, beta);
-            if (maximize && moveScore > bestScore)
+            if (maximize && (moveScore > alpha))
             {
                 bestMove = move;
                 alpha = moveScore;
             }
-            else if (!maximize && moveScore < bestScore)
+            else if (!maximize && (moveScore < beta))
             {
                 bestMove = move;
                 beta = moveScore;
