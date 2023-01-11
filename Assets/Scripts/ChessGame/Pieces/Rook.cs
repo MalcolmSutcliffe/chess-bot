@@ -14,6 +14,8 @@ public class Rook : SlidingPiece
     }
 
     public override Piece Copy(){
-        return new Rook(new int[] {position[0], position[1]} , playerType, pieceType);
+        Rook newRook = new Rook(new int[] {position[0], position[1]} , playerType, pieceType);
+        newRook.castlingRights = this.castlingRights;
+        return newRook;
     }
 }

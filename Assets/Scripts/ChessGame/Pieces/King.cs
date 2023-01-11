@@ -210,7 +210,9 @@ public class King : Piece
     }
 
     public override Piece Copy(){
-        return new King(new int[] {position[0], position[1]} , playerType, pieceType);
+        King newKing =  new King(new int[] {position[0], position[1]} , playerType, pieceType);
+        newKing.castlingRights = this.castlingRights;
+        return newKing;
     }
 
 }

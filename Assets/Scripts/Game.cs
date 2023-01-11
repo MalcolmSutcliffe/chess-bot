@@ -5,8 +5,13 @@ using UnityEngine;
 public class Game : MonoBehaviour
 {
     public static string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+    public static Dictionary<PlayerType, PlayerType> otherPlayer = new Dictionary<PlayerType, PlayerType>{
+        {PlayerType.White, PlayerType.Black},
+        {PlayerType.Black, PlayerType.White}
+    };
+    
     bool isGameActive;
-    bool isWaiting;
     
     public Board board;
     public ChessState chessState;
@@ -39,37 +44,41 @@ public class Game : MonoBehaviour
 
     private void InitializeGame(){
         playerWhite = new HumanPlayer(PlayerType.White);
-        playerBlack = new RandomPlayer(PlayerType.Black);
+        playerBlack = new MaterialisticMinMaxPlayer(PlayerType.Black, 2);
         DrawBoard();
-        isWaiting = false;
         isGameActive = true;
     }
 
     private void Update()
     {
-        if (isGameActive && !isWaiting)
+        if (isGameActive)
         {
             OptionalMove move;
             if (chessState.activePlayer.playerType == PlayerType.White)
             {
-                move = playerWhite.GetMove(chessState);
+                move = playerWhite.GetMove(chessState.DeepCopy());
             }
             else
             {
-                move = playerBlack.GetMove(chessState);
+                move = playerBlack.GetMove(chessState.DeepCopy());
             }
-            if (move.containsMove)
+            // check if move was returned
+            if (!move.containsMove)
             {
-                MoveOccured(move.move);
-                EventManager.instance.OnTurnEnded();
+                return;
             }
+            if (!chessState.GetLegalMoves().Contains(move.move))
+            {
+                return;
+            }
+            print(Move.EncodeMoveSAN(move.move, chessState));
+            MoveOccured(move.move);
+            EventManager.instance.OnTurnEnded();
         }
     }
 
     public void MoveOccured(Move move)
-    {
-        print(Move.EncodeMoveSAN(move, chessState));
-        
+    {  
         chessState.MovePiece(move);
         
         DrawBoard();

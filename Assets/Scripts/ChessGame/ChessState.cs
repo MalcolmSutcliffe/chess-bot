@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 public class ChessState{
     public ChessSquare[,] boardState {get; private set;}
     public int size {get; private set;}
@@ -528,6 +529,14 @@ public class ChessState{
                     newChessState.playerBlack.AddPiece(piece);
                 }
             }
+        }
+        if (this.activePlayer.playerType == PlayerType.White)
+        {
+            newChessState.activePlayer = newChessState.playerWhite;
+        } 
+        else
+        {
+            newChessState.activePlayer = newChessState.playerBlack; 
         }
         return newChessState;
     }

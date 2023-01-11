@@ -3,13 +3,14 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Move {
+public class Move{
     public PieceType pieceType {get; private set;}
     public int[] fromPos {get; private set;}
     public int[] toPos {get; private set;}
     public bool capturePiece {get; private set;}
     public bool promotePiece {get; private set;}
     public PieceType promotedTo {get; private set;}
+    private long hashID;
     
     public Move(PieceType pieceType, int[] fromPos, int[] toPos, bool capturePiece, bool promotePiece, PieceType promotedTo)
     {
@@ -19,6 +20,16 @@ public class Move {
         this.capturePiece = capturePiece;
         this.promotePiece = promotePiece;
         this.promotedTo = promotedTo;
+        string hashCode = "";
+        hashCode += (int) Piece.pieceToChar[pieceType];
+        hashCode += fromPos[0];
+        hashCode += fromPos[1];
+        hashCode += toPos[0];
+        hashCode += toPos[1];
+        hashCode += Convert.ToInt32(capturePiece);
+        hashCode += Convert.ToInt32(promotePiece);
+        hashCode += (int) Piece.pieceToChar[promotedTo];
+        this.hashID = Int64.Parse(hashCode);
     }
 
     public static string EncodeMoveSAN(Move move, ChessState chessState)
@@ -343,4 +354,21 @@ public class Move {
 
         return new int[]{file-'a',rank-'1'};
     }
+
+    public override bool Equals(object obj)
+    {
+        if (!(obj is Move))
+        {
+            return false;
+        }
+        Move other = (Move) obj;
+        
+        return (this.fromPos[0] == other.fromPos[0]) && (this.fromPos[1] == other.fromPos[1]) && (this.toPos[0] == other.toPos[0]) && (this.toPos[1] == other.toPos[1]) && (this.promotedTo == other.promotedTo);
+    }
+
+    public override int GetHashCode()
+    {
+        return (int) this.hashID;
+    }
+    
 }
