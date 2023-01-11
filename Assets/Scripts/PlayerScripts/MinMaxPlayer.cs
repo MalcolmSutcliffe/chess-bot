@@ -1,20 +1,24 @@
 using System.Linq;
+using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-
 
 public abstract class MinMaxPlayer : ChessPlayer {
 
     private int maxDepth;
+    private Dictionary<string, (int, float)> searchCache;
 
     public MinMaxPlayer(PlayerType playerType, int maxDepth) : base(playerType)
     {
         this.maxDepth = maxDepth;
+        this.searchCache = new Dictionary<string, (int, float)>();
     }
     
     public override OptionalMove GetMove(ChessState chessState)
     {
+        // time move
+        Stopwatch stopwatch = Stopwatch.StartNew(); 
+
         bool maximize = this.playerType == PlayerType.White;
 
         List<Move> legalMoves = chessState.GetLegalMoves();
@@ -30,7 +34,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
         foreach (var move in legalMoves)
         {
             // apply move to virtual board
-            ChessState virtualBoard = chessState.DeepCopy();
+            ChessState virtualBoard = ChessState.DeepCopy(chessState);
             virtualBoard.MovePiece(move);
             float moveScore = this.MinMax(virtualBoard, !maximize, 0, alpha, beta);
             if (maximize && (moveScore > alpha))
@@ -44,25 +48,40 @@ public abstract class MinMaxPlayer : ChessPlayer {
                 beta = moveScore;
             }
         }
+
+        stopwatch.Stop();
+        UnityEngine.Debug.Log("Depth: " + maxDepth + " time: " + stopwatch.ElapsedMilliseconds);
         return new OptionalMove(bestMove);
     }
 
-    // min max algo with alpha-beta pruning
+    // min max algo with alpha-beta pruning, search caching
     private float MinMax(ChessState chessState, bool maximize=true, int currentDepth=0, float alpha=-999, float beta=999)
-    {   
+    {
+        // check if state has been cached at same or higher depth
+        string encodedBoard = BoardEncoder.EncodeChessStateToFEN(chessState);
+        
+        if (searchCache.ContainsKey(encodedBoard) && searchCache[encodedBoard].Item1 >= maxDepth - currentDepth)
+        {
+            return searchCache[encodedBoard].Item2;
+        }
+        
+        float toReturn = 0;
         // Check Endgame
         int outcome = chessState.CheckEndGame();
         
         if (outcome == 1)
         {
+            searchCache[encodedBoard] = (maxDepth-currentDepth, 100);
             return 100;
         }
         else if (outcome == 2)
         {
+            searchCache[encodedBoard] = (maxDepth-currentDepth, -100);
             return -100;
         }
         else if (outcome > 0)
         {
+            searchCache[encodedBoard] = (maxDepth-currentDepth, 0);
             return 0;
         }
 
@@ -72,13 +91,16 @@ public abstract class MinMaxPlayer : ChessPlayer {
             return BoardHeuristic(chessState);
         }
 
-        // recurse through legal moves
+        // get legal moves
         List<Move> legalMoves = chessState.GetLegalMoves();
+
+        // sort by heuristic by best
+        legalMoves.Sort((move1, move2) => BoardHeuristicFromMove(chessState, move2).CompareTo(BoardHeuristicFromMove(chessState, move1)));
 
         foreach (var move in legalMoves)
         {
             // apply move to virtual board
-            ChessState virtualBoard = chessState.DeepCopy();
+            ChessState virtualBoard = ChessState.DeepCopy(chessState);
             virtualBoard.MovePiece(move);
             float moveScore = this.MinMax(virtualBoard, !maximize, currentDepth+1, alpha, beta);
             if (maximize)
@@ -89,7 +111,8 @@ public abstract class MinMaxPlayer : ChessPlayer {
                 }
                 if (alpha >= beta)
                 {
-                    return beta;
+                    toReturn = beta;
+                    break;
                 }
             }
             else
@@ -100,7 +123,8 @@ public abstract class MinMaxPlayer : ChessPlayer {
                 }
                 if (alpha >= beta)
                 {
-                    return alpha;
+                    toReturn = alpha;
+                    break;
                 }
             }
         }
@@ -108,8 +132,18 @@ public abstract class MinMaxPlayer : ChessPlayer {
         if (maximize)
             return alpha;
             
-        return beta;
-    
+        if (!maximize)
+            toReturn = beta;
+
+        searchCache[encodedBoard] = (maxDepth-currentDepth, toReturn);
+        return toReturn;
+    }
+
+    private float BoardHeuristicFromMove(ChessState chessState, Move move)
+    {
+        ChessState virtualBoard = ChessState.DeepCopy(chessState);
+        virtualBoard.MovePiece(move);
+        return BoardHeuristic(virtualBoard);
     }
     
     public abstract float BoardHeuristic(ChessState chessState);

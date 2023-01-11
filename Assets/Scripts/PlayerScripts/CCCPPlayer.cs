@@ -15,7 +15,7 @@ public class CCCPPlayer : ChessPlayer {
         int moveRating = 0;
         foreach (var legalMove in legalMoves)
         {
-            ChessState virtualBoard = chessState.DeepCopy();
+            ChessState virtualBoard = ChessState.DeepCopy(chessState);
             virtualBoard.MovePiece(legalMove);
             int outcome = virtualBoard.CheckEndGame();
             

@@ -56,11 +56,11 @@ public class Game : MonoBehaviour
             OptionalMove move;
             if (chessState.activePlayer.playerType == PlayerType.White)
             {
-                move = playerWhite.GetMove(chessState.DeepCopy());
+                move = playerWhite.GetMove(ChessState.DeepCopy(chessState));
             }
             else
             {
-                move = playerBlack.GetMove(chessState.DeepCopy());
+                move = playerBlack.GetMove(ChessState.DeepCopy(chessState));
             }
             // check if move was returned
             if (!move.containsMove)
@@ -120,14 +120,11 @@ public class Game : MonoBehaviour
     {
         pieceManager.ClearBoard();
         
-        for (int x = 0; x < size; x++)
+        for (int pos = 0; pos < 64; pos++)
         {
-            for (int y = 0; y < size; y++)
+            if (chessState.boardState[pos].containsPiece)
             {
-                if (chessState.boardState[x,y].containsPiece)
-                {
-                    pieceManager.DrawPiece(chessState.boardState[x,y].piece, new Vector3Int(x, y, 0));
-                }
+                pieceManager.DrawPiece(chessState.boardState[pos].piece, new Vector3Int(pos%8, pos/8, 0));
             }
         }
         DrawPreviousMove();
@@ -144,18 +141,18 @@ public class Game : MonoBehaviour
         Destroy(previousMoveHighlights[1]);
         previousMoveHighlights[0] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
         previousMoveHighlights[1] = Instantiate(previousMoveHighlightPrefab, gameObject.transform);
-        previousMoveHighlights[0].transform.position = new Vector3Int(chessState.previousMove[0][0], chessState.previousMove[0][1], 0);
-        previousMoveHighlights[1].transform.position = new Vector3Int(chessState.previousMove[1][0], chessState.previousMove[1][1], 0);
+        previousMoveHighlights[0].transform.position = new Vector3Int(chessState.previousMove[0] % 8, chessState.previousMove[0] / 8, 0);
+        previousMoveHighlights[1].transform.position = new Vector3Int(chessState.previousMove[1] % 8, chessState.previousMove[1] / 8, 0);
     }
     
     public void DisplayCheck()
     {
         Destroy(isInCheck);
-        int[] kingPosition = chessState.GetKingPosition(chessState.activePlayer.playerType);
+        int kingPosition = chessState.GetKingPosition(chessState.activePlayer.playerType);
         if (chessState.IsKingInCheck(chessState.activePlayer.playerType))
         {
             isInCheck = Instantiate(isInCheckPrefab, gameObject.transform);
-            isInCheck.transform.position = new Vector3Int(kingPosition[0], kingPosition[1], 0);
+            isInCheck.transform.position = new Vector3Int(kingPosition % 8, kingPosition / 8, 0);
         }
     }
 

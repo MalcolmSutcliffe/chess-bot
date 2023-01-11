@@ -5,14 +5,14 @@ using System.Collections.Generic;
 
 public class Move{
     public PieceType pieceType {get; private set;}
-    public int[] fromPos {get; private set;}
-    public int[] toPos {get; private set;}
+    public int fromPos {get; private set;}
+    public int toPos {get; private set;}
     public bool capturePiece {get; private set;}
     public bool promotePiece {get; private set;}
     public PieceType promotedTo {get; private set;}
     private long hashID;
     
-    public Move(PieceType pieceType, int[] fromPos, int[] toPos, bool capturePiece, bool promotePiece, PieceType promotedTo)
+    public Move(PieceType pieceType, int fromPos, int toPos, bool capturePiece, bool promotePiece, PieceType promotedTo)
     {
         this.pieceType = pieceType;
         this.fromPos = fromPos;
@@ -22,10 +22,10 @@ public class Move{
         this.promotedTo = promotedTo;
         string hashCode = "";
         hashCode += (int) Piece.pieceToChar[pieceType];
-        hashCode += fromPos[0];
-        hashCode += fromPos[1];
-        hashCode += toPos[0];
-        hashCode += toPos[1];
+        hashCode += fromPos;
+        hashCode += fromPos;
+        hashCode += toPos;
+        hashCode += toPos;
         hashCode += Convert.ToInt32(capturePiece);
         hashCode += Convert.ToInt32(promotePiece);
         hashCode += (int) Piece.pieceToChar[promotedTo];
@@ -36,12 +36,12 @@ public class Move{
     {
         string toReturn="";
         // Edge case king side castle
-        if (move.pieceType == PieceType.King && (move.toPos[0] - move.fromPos[0] == 2))
+        if (move.pieceType == PieceType.King && (move.toPos - move.fromPos == 2))
         {
             return "0-0";
         }
         // Edge case queen side castle
-        if (move.pieceType == PieceType.King && (move.toPos[0] - move.fromPos[0] == -2))
+        if (move.pieceType == PieceType.King && (move.toPos - move.fromPos == -2))
         {
             return "0-0-0";
         }
@@ -63,7 +63,7 @@ public class Move{
             }
             
             // if same piece, dont worry
-            if (piece.position[0] == move.fromPos[0] && piece.position[1] == move.fromPos[1])
+            if (piece.position == move.fromPos)
             {
                 continue;
             }
@@ -74,10 +74,10 @@ public class Move{
             foreach (var m in legalMoves)
             {
                 // if can travel to same position, then disambiguation is required
-                if (m.toPos[0] == move.toPos[0] && m.toPos[1] == move.toPos[1])
+                if (m.toPos == move.toPos)
                 {
                     // if not in same file, disambiguate by file
-                    if (piece.position[0] != move.fromPos[0])
+                    if (piece.position % 8 != move.fromPos % 8)
                     {
                         disambiguateByFile = true;
                         continue;
@@ -95,11 +95,11 @@ public class Move{
 
         if (disambiguateByFile)
         {
-            toReturn += positionXToFile(move.fromPos[0]); 
+            toReturn += positionXToFile(move.fromPos); 
         }
         if (disambiguateByRank)
         {
-            toReturn += positionYToRank(move.fromPos[1]); 
+            toReturn += positionYToRank(move.fromPos); 
         }
 
         // capture
@@ -131,22 +131,22 @@ public class Move{
         if (moveSAN.Equals("0-0") || moveSAN.Equals("O-O"))
         {
             if (chessState.activePlayer.playerType == PlayerType.White)
-                return new Move(PieceType.King, new int[] {4, 0}, new int[] {6, 0}, false, false, PieceType.King);
+                return new Move(PieceType.King, 4, 6, false, false, PieceType.King);
             if (chessState.activePlayer.playerType == PlayerType.Black)
-                return new Move(PieceType.King, new int[] {4, 7}, new int[] {6, 7}, false, false, PieceType.King);
+                return new Move(PieceType.King, 60, 62, false, false, PieceType.King);
         }
         // Edge case queen side castle
         if (moveSAN.Equals("0-0-0") || moveSAN.Equals("O-O-O"))
         {
             if (chessState.activePlayer.playerType == PlayerType.White)
-                return new Move(PieceType.King, new int[] {4, 0}, new int[] {2, 0}, false, false, PieceType.King);
+                return new Move(PieceType.King, 4, 2, false, false, PieceType.King);
             if (chessState.activePlayer.playerType == PlayerType.Black)
-                return new Move(PieceType.King, new int[] {4, 7}, new int[] {2, 7}, false, false, PieceType.King);
+                return new Move(PieceType.King, 60, 58, false, false, PieceType.King);
         }
         
         PieceType pieceType;
-        int[] fromPos;
-        int[] toPos;
+        int fromPos;
+        int toPos;
         bool capturePiece;
         bool promotePiece;
         PieceType promotedTo;
@@ -154,7 +154,7 @@ public class Move{
         moveSAN.Replace("-", "");
 
         // encode piece 
-        if (moveSAN[0] >= 65 && moveSAN[0] <= 90)
+        if (moveSAN[0] >= 'A' && moveSAN[0] <= 'Z')
         {
             pieceType = Piece.charToPiece[moveSAN[0]];
             // remove first char
@@ -187,7 +187,7 @@ public class Move{
         if (moveSAN.Length==2)
         {
             toPos = Move.chessNotationToPosition(moveSAN);
-            fromPos = new int[] {-1, -1};
+            fromPos = -1;
             foreach (var piece in chessState.activePlayer.pieces)
             {
                 if (piece.pieceType != pieceType)
@@ -197,14 +197,14 @@ public class Move{
                 
                 foreach (var move in piece.GetLegalMoves(chessState))
                 {
-                    if (move.toPos[0] == toPos[0] && move.toPos[1] == toPos[1])
+                    if (move.toPos == toPos)
                     {
                         fromPos = piece.position;
                         break;
                     }
                 }
             }
-            if (fromPos[0] == -1)
+            if (fromPos == -1)
             {
                 // throw error
                 throw new ArgumentException("could not find piece on board with requested legal move");
@@ -215,7 +215,7 @@ public class Move{
         else if (moveSAN.Length==3)
         {
             toPos = Move.chessNotationToPosition(moveSAN.Substring(1,2));
-            fromPos = new int[] {-1, -1};
+            fromPos = -1;
             // given indicator is file
             if (moveSAN[0] >= 'a' && moveSAN[0] <= 'h')
             {
@@ -228,25 +228,24 @@ public class Move{
                         continue;
                     }
 
-                    if (piece.position[0] != file)
+                    if (piece.position % 8 != file)
                     {
                         continue;
                     }
                     foreach (var move in piece.GetLegalMoves(chessState))
                     {
-                        if (move.toPos[0] == toPos[0] && move.toPos[1] == toPos[1])
+                        if (move.toPos == toPos)
                         {
                             fromPos = piece.position;
                             break;
                         }
                     }
                 }
-                if (fromPos[0] == -1)
-            {
-                // throw error
-                throw new ArgumentException("could not find piece on board with requested legal move");
-            }
-            
+                if (fromPos == -1)
+                {
+                    // throw error
+                    throw new ArgumentException("could not find piece on board with requested legal move");
+                }
             }
             
             // given indicator is rank
@@ -261,20 +260,20 @@ public class Move{
                         continue;
                     }
 
-                    if (piece.position[1] != rank)
+                    if (piece.position / 8 != rank)
                     {
                         continue;
                     }
                     foreach (var move in piece.GetLegalMoves(chessState))
                     {
-                        if (move.toPos[0] == toPos[0] && move.toPos[1] == toPos[1])
+                        if (move.toPos == toPos)
                         {
                             fromPos = piece.position;
                             break;
                         }
                     }
                 }
-                if (fromPos[0] == -1)
+                if (fromPos == -1)
             {
                 // throw error
                 throw new ArgumentException("could not find piece on board with requested legal move");
@@ -295,7 +294,7 @@ public class Move{
         }
         
         // check illegal promotion notation
-        if (pieceType == PieceType.Pawn && (toPos[1] == 7 || toPos[1] == 0))
+        if (pieceType == PieceType.Pawn && (toPos >= 56 || toPos <= 7))
         {
             if (!promotePiece)
             {
@@ -306,29 +305,21 @@ public class Move{
         return new Move(pieceType, fromPos, toPos, capturePiece, promotePiece, promotedTo);
     }
 
-    public static string positionToChessNotation(int[] position)
+    private static char positionXToFile(int position)
     {
-        return "" + positionXToFile(position[0]) + positionYToRank(position[1]);
+        return (char) ('a' + position%8);
+    }
+    private static char positionYToRank(int position)
+    {
+        return (char) ('1' + position/8);
     }
 
-    private static char positionXToFile(int x)
+    public static string positionToChessNotation(int position)
     {
-        if (x < 0 || x > 7)
-        {
-            throw new ArgumentException("position out of bounds");
-        }
-        return (char) ('a' + x);
-    }
-    private static char positionYToRank(int y)
-    {
-        if (y < 0 || y > 7)
-        {
-            throw new ArgumentException("position out of bounds");
-        }
-        return (char) ('1' + y);
+        return "" + positionXToFile(position) + positionYToRank(position);
     }
 
-    public static int[] chessNotationToPosition(string chessNotation)
+    public static int chessNotationToPosition(string chessNotation)
     {
         if (chessNotation.Length != 2)
         {
@@ -352,7 +343,7 @@ public class Move{
             throw new ArgumentException("illegal position notation!");
         }
 
-        return new int[]{file-'a',rank-'1'};
+        return (file-'a')*8 + (rank-'1');
     }
 
     public override bool Equals(object obj)
@@ -363,7 +354,7 @@ public class Move{
         }
         Move other = (Move) obj;
         
-        return (this.fromPos[0] == other.fromPos[0]) && (this.fromPos[1] == other.fromPos[1]) && (this.toPos[0] == other.toPos[0]) && (this.toPos[1] == other.toPos[1]) && (this.promotedTo == other.promotedTo);
+        return (this.fromPos == other.fromPos) && (this.toPos == other.toPos) && (this.promotedTo == other.promotedTo);
     }
 
     public override int GetHashCode()

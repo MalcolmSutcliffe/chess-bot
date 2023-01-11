@@ -16,8 +16,8 @@ public class MoveSelector : MonoBehaviour
 
     [SerializeField] private GameObject pawnPromotionMenu;
     private bool isPromoting;
-    private int[] promoteFromPos;
-    private int[] promoteToPos;
+    private int promoteFromPos;
+    private int promoteToPos;
     private bool isPromotionCapture;
 
     void Awake()
@@ -35,7 +35,7 @@ public class MoveSelector : MonoBehaviour
         EventManager.instance.PawnPromotionEnded += StopPawnPromotion;
     }
 
-    private void StartPawnPromotion(int[] fromPos, int[] toPos, bool isCapture)
+    private void StartPawnPromotion(int fromPos, int toPos, bool isCapture)
     {
         promoteFromPos = fromPos;
         promoteToPos = toPos;
@@ -46,8 +46,8 @@ public class MoveSelector : MonoBehaviour
 
     private void StopPawnPromotion()
     {
-        promoteFromPos = new int[] {-1, -1};
-        promoteToPos = new int[] {-1, -1};
+        promoteFromPos = -1;
+        promoteToPos = -1;
         isPromotionCapture = false;
         isPromoting = false;
         pawnPromotionMenu.SetActive(false);
@@ -68,20 +68,18 @@ public class MoveSelector : MonoBehaviour
         {
             return;
         }
-
-        if (!chessState.IsInBoard(new int[] {tilePos.x, tilePos.y}))
-            {
-                Unselect();
-                return;
-            }
-        
+        if(!(tilePos.x >= 0 && tilePos.x < 8) || !(tilePos.y >= 0 && tilePos.y < 8))
+        {
+            Unselect();
+            return;
+        }
         if (selectedPiece != null)
         {
             List<Move> legalMoves = selectedPiece.GetLegalMoves(chessState);
             
             foreach (var m in legalMoves)
             {
-                if (m.toPos[0] == tilePos.x && m.toPos[1] == tilePos.y)
+                if (m.toPos % 8 == tilePos.x && m.toPos / 8 == tilePos.y)
                 {
                     // check for pawn promotion
                     if (m.promotePiece)
@@ -97,12 +95,12 @@ public class MoveSelector : MonoBehaviour
                 }
             }
             
-            if (chessState.boardState[tilePos.x, tilePos.y].containsPiece && tilePos.x == selectedPiece.position[0] && tilePos.y == selectedPiece.position[1])
+            if (chessState.boardState[tilePos.x +  tilePos.y * 8].containsPiece && tilePos.x == selectedPiece.position % 8 && tilePos.y == selectedPiece.position / 8)
             {
                     Unselect();
                     return;
             }
-            if (chessState.boardState[tilePos.x, tilePos.y].containsPiece && chessState.boardState[tilePos.x, tilePos.y].piece.playerType == chessState.activePlayer.playerType)
+            if (chessState.boardState[tilePos.x +  tilePos.y * 8].containsPiece && chessState.boardState[tilePos.x +  tilePos.y * 8].piece.playerType == chessState.activePlayer.playerType)
             {
                     Unselect();
                     Select(chessState, tilePos);
@@ -110,51 +108,52 @@ public class MoveSelector : MonoBehaviour
             }
         }
 
-        if (!chessState.boardState[tilePos.x, tilePos.y].containsPiece)
+        if (!chessState.boardState[tilePos.x +  tilePos.y * 8].containsPiece)
         {
             Unselect();
             return;
         }
         
-        if (!(chessState.boardState[tilePos.x, tilePos.y].piece.playerType == playerType))
+        if (!(chessState.boardState[tilePos.x +  tilePos.y * 8].piece.playerType == playerType))
         {
+            print("d");
             Unselect();
             return;
         }
         Select(chessState, tilePos);
     }
 
-    private void HighlightPostions(ChessState chessState, List<int[]> positions)
+    private void HighlightPostions(ChessState chessState, List<int> positions)
     {
         foreach(var pos in positions)
         {
-            if (chessState.boardState[pos[0], pos[1]].containsPiece)
+            if (chessState.boardState[pos].containsPiece)
             {
                 var newObject = Instantiate(attackingPieceHighlightPrefab, gameObject.transform);
                 activeGameObjects.Add(newObject);
-                newObject.transform.position = new Vector3Int(pos[0], pos[1], 0);
+                newObject.transform.position = new Vector3Int(pos%8, pos/8, 0);
                 continue;
             }
             else{
                 var newObject = Instantiate(legalMovePrefab, gameObject.transform);
                 activeGameObjects.Add(newObject);
-                newObject.transform.position = new Vector3Int(pos[0], pos[1], 0);
+                newObject.transform.position = new Vector3Int(pos%8, pos/8, 0);
             }
         }
     }
 
     private void Select(ChessState chessState, Vector3Int tilePos)
     {
-        if (!chessState.boardState[tilePos.x, tilePos.y].containsPiece)
+        if (!chessState.boardState[tilePos.x +  tilePos.y * 8].containsPiece)
         {
             Unselect();
             return;
         }
-        selectedPiece = chessState.boardState[tilePos.x, tilePos.y].piece;
+        selectedPiece = chessState.boardState[tilePos.x +  tilePos.y * 8].piece;
         var newObject = Instantiate(selectedHighlightPrefab, gameObject.transform);
         newObject.transform.position = tilePos;
         activeGameObjects.Add(newObject);
-        List<int[]> positions = new List<int[]>();
+        List<int> positions = new List<int>();
         foreach(Move m in selectedPiece.GetLegalMoves(chessState))
         {
             positions.Add(m.toPos);
