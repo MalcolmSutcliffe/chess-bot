@@ -2,6 +2,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public abstract class MinMaxPlayer : ChessPlayer {
 
@@ -16,6 +17,14 @@ public abstract class MinMaxPlayer : ChessPlayer {
     
     public override OptionalMove GetMove(ChessState chessState)
     {
+        // check opening database
+        List<Move> openingMoves = OpeningTree.GetOpeningMove(chessState);
+        if (openingMoves.Count > 0)
+        {
+            
+            Move openingMove =openingMoves[Random.Range(0, openingMoves.Count)];
+            return new OptionalMove(openingMove);
+        } 
         // time move
         Stopwatch stopwatch = Stopwatch.StartNew(); 
 
@@ -35,7 +44,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
         {
             // apply move to virtual board
             ChessState virtualBoard = ChessState.DeepCopy(chessState);
-            virtualBoard.MovePiece(move);
+            virtualBoard.VirtualMovePiece(move);
             float moveScore = this.MinMax(virtualBoard, !maximize, 0, alpha, beta);
             if (maximize && (moveScore > alpha))
             {
@@ -101,7 +110,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
         {
             // apply move to virtual board
             ChessState virtualBoard = ChessState.DeepCopy(chessState);
-            virtualBoard.MovePiece(move);
+            virtualBoard.VirtualMovePiece(move);
             float moveScore = this.MinMax(virtualBoard, !maximize, currentDepth+1, alpha, beta);
             if (maximize)
             {
@@ -142,7 +151,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
     private float BoardHeuristicFromMove(ChessState chessState, Move move)
     {
         ChessState virtualBoard = ChessState.DeepCopy(chessState);
-        virtualBoard.MovePiece(move);
+        virtualBoard.VirtualMovePiece(move);
         return BoardHeuristic(virtualBoard);
     }
     

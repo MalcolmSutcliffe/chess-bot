@@ -9,6 +9,7 @@ public class ChessState{
     public int halfClock {get; private set;} // time since last capture or pawn move used for draws
     public int fullMoveCount {get; private set;}
     public Dictionary<string, int> stateHistory {get; private set;}
+    public string gameMoves {get; private set;}
     
     public Player playerWhite {get; private set;}
     public Player playerBlack {get; private set;}
@@ -28,6 +29,7 @@ public class ChessState{
         this.fullMoveCount = 1;
 
         this.stateHistory = new Dictionary<string, int>();
+        this.gameMoves = "";
         
         for (int x = 0; x < 64; x++)
         {
@@ -43,6 +45,7 @@ public class ChessState{
         this.playerBlack = new Player(PlayerType.Black);
 
         this.stateHistory = new Dictionary<string, int>();
+        this.gameMoves = "";
 
         for (int x = 0; x < 64; x++)
         {
@@ -176,6 +179,88 @@ public class ChessState{
 
     
     public void MovePiece(Move move)
+    {
+        int fromPos = move.fromPos;
+        int toPos = move.toPos;
+        bool promotePiece = move.promotePiece;
+        PieceType promotedTo = move.promotedTo;
+
+        string moveSAN = Move.EncodeMoveSAN(move, this);
+
+        // check that position has a piece
+        if (!this.boardState[fromPos].containsPiece)
+        {
+            return;
+        }
+
+        Piece piece = this.boardState[fromPos].piece;
+
+        halfClock++;
+
+        if (move.capturePiece || piece.pieceType == PieceType.Pawn)
+        {
+            halfClock = 0;
+        }
+
+        // EDGE CASE: castle move (only move where 2 pieces are moved)
+        if (this.boardState[fromPos].piece.pieceType == PieceType.King && Math.Abs(fromPos-toPos) == 2)
+        {
+            int rookFromPos;
+            int rookToPos;
+
+            // left castle
+            if ((fromPos - toPos) > 0)
+            {
+                rookFromPos = fromPos-4;
+                rookToPos = toPos + 1;
+            }
+            //right castle
+            else
+            {
+                rookFromPos = fromPos+3;
+                rookToPos = toPos-1;
+            }
+
+            Piece rookPiece = this.boardState[rookFromPos].piece;
+            
+            rookPiece.Move(rookToPos);
+            this.boardState[rookFromPos].RemovePiece();
+            this.boardState[rookToPos].SetPiece(rookPiece);
+        }
+
+        // EDGE CASE: en passant
+        if (piece.pieceType == PieceType.Pawn && fromPos % 8 != toPos % 8 && !this.boardState[toPos].containsPiece)
+        {
+            CapturePiece(toPos % 8 + fromPos / 8);
+        }
+
+        // if position moving to has piece, remove it
+        if (this.boardState[toPos].containsPiece)
+        {
+             CapturePiece(toPos);
+        }
+
+        // EDGE CASE: pawn promotion
+        if (promotePiece)
+        {
+            CapturePiece(fromPos);
+            AddPiece(toPos, activePlayer.playerType, promotedTo);
+        }
+        else
+        {
+            // move piece
+            piece.Move(toPos);
+            this.boardState[fromPos].RemovePiece();
+            this.boardState[toPos].SetPiece(piece);
+        }
+        
+        this.previousMove = new int[]{fromPos, toPos};
+
+        UpdateMoveString(moveSAN);
+        EndTurn();
+    }
+
+    public void VirtualMovePiece(Move move)
     {
         int fromPos = move.fromPos;
         int toPos = move.toPos;
@@ -316,6 +401,21 @@ public class ChessState{
         return false;
     }
 
+    public void UpdateMoveString(string moveSAN)
+    {
+        if (activePlayer.playerType == PlayerType.White)
+        {
+            this.gameMoves += this.fullMoveCount;
+            this.gameMoves += '.';
+            this.gameMoves += moveSAN;
+            this.gameMoves += " ";
+        }
+        else if (activePlayer.playerType == PlayerType.Black)
+        {
+            this.gameMoves += moveSAN;
+            this.gameMoves += " ";
+        }
+    }
     public void EndTurn()
     {
         if (activePlayer.playerType == PlayerType.White)
@@ -476,6 +576,7 @@ public class ChessState{
     public static ChessState DeepCopy(ChessState chessState)
     {
         ChessState newChessState = new ChessState();
+        newChessState.gameMoves = chessState.gameMoves;
         for (int x = 0; x < 64; x++)
         {
             newChessState.boardState[x] = new ChessSquare();

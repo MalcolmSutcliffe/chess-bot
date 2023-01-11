@@ -44,7 +44,7 @@ public class Game : MonoBehaviour
 
     private void InitializeGame(){
         playerWhite = new HumanPlayer(PlayerType.White);
-        playerBlack = new MaterialisticMinMaxPlayer(PlayerType.Black, 2);
+        playerBlack = new MaterialisticMinMaxPlayer(PlayerType.Black, 1);
         DrawBoard();
         isGameActive = true;
     }
@@ -71,9 +71,9 @@ public class Game : MonoBehaviour
             {
                 return;
             }
-            print(Move.EncodeMoveSAN(move.move, chessState));
             MoveOccured(move.move);
             EventManager.instance.OnTurnEnded();
+            print(chessState.gameMoves);
         }
     }
 
