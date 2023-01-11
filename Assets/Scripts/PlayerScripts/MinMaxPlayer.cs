@@ -2,7 +2,6 @@ using System.Linq;
 using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public abstract class MinMaxPlayer : ChessPlayer {
 
@@ -55,7 +54,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
         return new OptionalMove(bestMove);
     }
 
-    // min max algo with alpha-beta pruning
+    // min max algo with alpha-beta pruning, search caching
     private float MinMax(ChessState chessState, bool maximize=true, int currentDepth=0, float alpha=-999, float beta=999)
     {
         // check if state has been cached at same or higher depth
