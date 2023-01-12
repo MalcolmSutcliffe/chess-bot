@@ -44,7 +44,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
         {
             // apply move to virtual board
             ChessState virtualBoard = ChessState.DeepCopy(chessState);
-            virtualBoard.VirtualMovePiece(move);
+            virtualBoard.MovePiece(move, true);
             float moveScore = this.MinMax(virtualBoard, !maximize, 0, alpha, beta);
             if (maximize && (moveScore > alpha))
             {
@@ -110,7 +110,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
         {
             // apply move to virtual board
             ChessState virtualBoard = ChessState.DeepCopy(chessState);
-            virtualBoard.VirtualMovePiece(move);
+            virtualBoard.MovePiece(move, true);
             float moveScore = this.MinMax(virtualBoard, !maximize, currentDepth+1, alpha, beta);
             if (maximize)
             {
@@ -151,7 +151,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
     private float BoardHeuristicFromMove(ChessState chessState, Move move)
     {
         ChessState virtualBoard = ChessState.DeepCopy(chessState);
-        virtualBoard.VirtualMovePiece(move);
+        virtualBoard.MovePiece(move, true);
         return BoardHeuristic(virtualBoard);
     }
     

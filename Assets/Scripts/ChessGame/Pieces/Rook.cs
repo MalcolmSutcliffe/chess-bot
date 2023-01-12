@@ -6,10 +6,7 @@ public class Rook : SlidingPiece
     public Rook(int position, PlayerType playerType, PieceType pieceType) : base(position, playerType, pieceType, ROOK_MOVE_DIRECTIONS)
     {
     }
-    public override void Move(int position){
-        
-        base.Move(position);
-    }
+    
     public override Piece Copy(){
         return new Rook(position , playerType, pieceType);
     }

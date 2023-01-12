@@ -178,17 +178,27 @@ public class ChessState{
     }
 
     
-    public void MovePiece(Move move)
+    public void MovePiece(Move move, bool isVirtual = false)
     {
         int fromPos = move.fromPos;
         int toPos = move.toPos;
         bool promotePiece = move.promotePiece;
         PieceType promotedTo = move.promotedTo;
 
-        string moveSAN = Move.EncodeMoveSAN(move, this);
+        if (!isVirtual)
+        {
+            string moveSAN = Move.EncodeMoveSAN(move, this);
+            UpdateMoveString(moveSAN);
+        }
 
         // check that position has a piece
         if (!this.boardState[fromPos].containsPiece)
+        {
+            return;
+        }
+
+        // check is correct piece
+        if (this.boardState[fromPos].piece.playerType != this.activePlayer.playerType)
         {
             return;
         }
@@ -200,6 +210,33 @@ public class ChessState{
         if (move.capturePiece || piece.pieceType == PieceType.Pawn)
         {
             halfClock = 0;
+        }
+
+        // rook castling rights
+        if (piece.pieceType == PieceType.Rook)
+        {
+            if (this.activePlayer.playerType == PlayerType.White)
+            {
+                if (fromPos == 0)
+                {
+                    this.playerWhite.king.queenCastlingRights = false;
+                }
+                if (fromPos == 7)
+                {
+                    this.playerWhite.king.kingCastlingRights = false;
+                }
+            }
+            else if (this.activePlayer.playerType == PlayerType.Black)
+            {
+                if (fromPos == 56)
+                {
+                    this.playerBlack.king.queenCastlingRights = false;
+                }
+                if (fromPos == 63)
+                {
+                    this.playerBlack.king.kingCastlingRights = false;
+                }
+            }
         }
 
         // EDGE CASE: castle move (only move where 2 pieces are moved)
@@ -221,84 +258,9 @@ public class ChessState{
                 rookToPos = toPos-1;
             }
 
-            Piece rookPiece = this.boardState[rookFromPos].piece;
-            
-            rookPiece.Move(rookToPos);
-            this.boardState[rookFromPos].RemovePiece();
-            this.boardState[rookToPos].SetPiece(rookPiece);
-        }
-
-        // EDGE CASE: en passant
-        if (piece.pieceType == PieceType.Pawn && fromPos % 8 != toPos % 8 && !this.boardState[toPos].containsPiece)
-        {
-            CapturePiece(toPos % 8 + fromPos / 8);
-        }
-
-        // if position moving to has piece, remove it
-        if (this.boardState[toPos].containsPiece)
-        {
-             CapturePiece(toPos);
-        }
-
-        // EDGE CASE: pawn promotion
-        if (promotePiece)
-        {
-            CapturePiece(fromPos);
-            AddPiece(toPos, activePlayer.playerType, promotedTo);
-        }
-        else
-        {
-            // move piece
-            piece.Move(toPos);
-            this.boardState[fromPos].RemovePiece();
-            this.boardState[toPos].SetPiece(piece);
-        }
-        
-        this.previousMove = new int[]{fromPos, toPos};
-
-        UpdateMoveString(moveSAN);
-        EndTurn();
-    }
-
-    public void VirtualMovePiece(Move move)
-    {
-        int fromPos = move.fromPos;
-        int toPos = move.toPos;
-        bool promotePiece = move.promotePiece;
-        PieceType promotedTo = move.promotedTo;
-
-        // check that position has a piece
-        if (!this.boardState[fromPos].containsPiece)
-        {
-            return;
-        }
-
-        Piece piece = this.boardState[fromPos].piece;
-
-        halfClock++;
-
-        if (move.capturePiece || piece.pieceType == PieceType.Pawn)
-        {
-            halfClock = 0;
-        }
-
-        // EDGE CASE: castle move (only move where 2 pieces are moved)
-        if (move.pieceType == PieceType.King && Math.Abs(fromPos-toPos) == 2)
-        {
-            int rookFromPos;
-            int rookToPos;
-
-            // left castle
-            if ((fromPos - toPos) > 0)
+            if (!this.boardState[rookFromPos].containsPiece)
             {
-                rookFromPos = fromPos-4;
-                rookToPos = toPos + 1;
-            }
-            //right castle
-            else
-            {
-                rookFromPos = fromPos+3;
-                rookToPos = toPos-1;
+                return;
             }
 
             Piece rookPiece = this.boardState[rookFromPos].piece;
@@ -335,7 +297,6 @@ public class ChessState{
         }
         
         this.previousMove = new int[]{fromPos, toPos};
-
         EndTurn();
     }
 
@@ -480,7 +441,6 @@ public class ChessState{
                     }
                     else if (boardState[pos].piece.pieceType == PieceType.Bishop || boardState[pos].piece.pieceType == PieceType.Queen)
                     {
-                        Debug.Log("h");
                         return true;
                     }
                     break;
