@@ -44,7 +44,7 @@ public class Game : MonoBehaviour
 
     private void InitializeGame(){
         playerWhite = new HumanPlayer(PlayerType.White);
-        playerBlack = new MaterialisticMinMaxPlayer(PlayerType.Black, 1);
+        playerBlack = new MaterialisticMinMaxPlayer(PlayerType.Black, 2);
         DrawBoard();
         isGameActive = true;
     }

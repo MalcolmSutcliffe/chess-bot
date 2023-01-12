@@ -283,7 +283,7 @@ public class ChessState{
         }
 
         // EDGE CASE: castle move (only move where 2 pieces are moved)
-        if (this.boardState[fromPos].piece.pieceType == PieceType.King && Math.Abs(fromPos-toPos) == 2)
+        if (move.pieceType == PieceType.King && Math.Abs(fromPos-toPos) == 2)
         {
             int rookFromPos;
             int rookToPos;
@@ -372,32 +372,123 @@ public class ChessState{
 
     public bool IsKingInCheck(PlayerType playerType, int kingPosition = -1)
     {
-        List<Piece> piecesToCheck = new List<Piece>();
-        
-        if (playerType == PlayerType.White)
-        {
-            piecesToCheck = playerBlack.pieces;
-        }
-        if (playerType == PlayerType.Black)
-        {
-            piecesToCheck = playerWhite.pieces;
-        }
-
         if (kingPosition == -1)
         {
-            kingPosition = GetKingPosition(playerType);
-        }
-        
-        foreach (var piece in piecesToCheck)
-        {
-            foreach (var possibleMove in piece.GetPossibleMoves(this))
+            if (playerType == PlayerType.White)
             {
-                if (possibleMove.toPos == kingPosition)
+                kingPosition = playerWhite.king.position;
+            }
+            if (playerType == PlayerType.Black)
+            {
+                kingPosition = playerBlack.king.position;
+            }
+        }
+
+        // use slider approach to avoid deep recursion
+
+        // check pawns
+        int direction = 1;
+        if (playerType == PlayerType.Black)
+        {
+            direction = -1;
+        }
+        if (IsInBoard(kingPosition %8 -1, kingPosition/ 8 + direction))
+        {
+            int pawnPos = kingPosition + 8*direction-1;
+            if (boardState[pawnPos].containsPiece && boardState[pawnPos].piece.playerType != playerType && boardState[pawnPos].piece.pieceType == PieceType.Pawn)
+            {
+                return true;
+            }
+        }
+        if (IsInBoard(kingPosition %8 +1, kingPosition/ 8 + direction))
+        {
+            int pawnPos = kingPosition +8*direction+1;
+            if (boardState[pawnPos].containsPiece && boardState[pawnPos].piece.playerType != playerType && boardState[pawnPos].piece.pieceType == PieceType.Pawn)
+            {
+                return true;
+            }
+        }
+
+        // check knights
+        foreach(var move in Knight.KNIGHT_MOVE_DIRECTIONS)
+        {
+            if (!IsInBoard(kingPosition % 8 + move[0], kingPosition /8 + move[1])){
+                continue;
+            }
+            
+            int nPos = kingPosition + move[0] + move[1]*8;
+            
+            if(boardState[nPos].containsPiece && boardState[nPos].piece.playerType != playerType && boardState[nPos].piece.pieceType == PieceType.Knight)
+            {
+                return true;
+            }
+        }
+
+        // check king for redundancy
+        foreach(var move in King.KING_MOVE_DIRECTIONS)
+        {
+            if (!IsInBoard(kingPosition % 8 + move[0], kingPosition /8 + move[1])){
+                continue;
+            }
+            
+            int kPos = kingPosition + move[0] + move[1]*8;
+            
+            if(boardState[kPos].containsPiece && boardState[kPos].piece.playerType != playerType && boardState[kPos].piece.pieceType == PieceType.King)
+            {
+                return true;
+            }
+        }
+
+        // check rook-sliding pieces
+        foreach(var move in Rook.ROOK_MOVE_DIRECTIONS)
+        {
+            int pos = kingPosition;
+            
+            while(IsInBoard(pos % 8 + move[0], pos/8 + move[1]))
+            {
+                pos = pos + move[0] + move[1]*8;
+                
+                if (boardState[pos].containsPiece)
+                {
+                    if (boardState[pos].piece.playerType == playerType)
+                    {
+                        break;
+                    }
+                    if (boardState[pos].piece.playerType != playerType && (boardState[pos].piece.pieceType == PieceType.Rook || boardState[pos].piece.pieceType == PieceType.Queen))
                     {
                         return true;
                     }
+                    break;
                 }
+            
+            }
         }
+
+        // check bishop-sliding pieces
+        foreach(var move in Bishop.BISHOP_MOVE_DIRECTIONS)
+        {
+            int pos = kingPosition;
+            
+            while(IsInBoard(pos % 8 + move[0], pos/8 + move[1]))
+            {
+                pos = pos + move[0] + move[1]*8;
+                if (boardState[pos].containsPiece)
+                {
+                    if (boardState[pos].piece.playerType == playerType)
+                    {
+                        break;
+                    }
+                    else if (boardState[pos].piece.pieceType == PieceType.Bishop || boardState[pos].piece.pieceType == PieceType.Queen)
+                    {
+                        Debug.Log("h");
+                        return true;
+                    }
+                    break;
+                }
+            
+            }
+        }
+
         return false;
     }
 

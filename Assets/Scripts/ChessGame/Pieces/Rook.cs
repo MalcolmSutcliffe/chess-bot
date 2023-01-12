@@ -7,6 +7,7 @@ public class Rook : SlidingPiece
     {
     }
     public override void Move(int position){
+        
         base.Move(position);
     }
     public override Piece Copy(){
