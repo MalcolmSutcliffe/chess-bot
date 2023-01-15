@@ -71,9 +71,9 @@ public class Game : MonoBehaviour
             {
                 return;
             }
-            print(Move.EncodeMoveSAN(move.move, chessState));
             MoveOccured(move.move);
             EventManager.instance.OnTurnEnded();
+            print(chessState.gameMoves);
         }
     }
 

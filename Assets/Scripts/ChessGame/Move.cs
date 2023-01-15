@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class Move{
     public PieceType pieceType {get; private set;}
@@ -21,13 +22,8 @@ public class Move{
         this.promotePiece = promotePiece;
         this.promotedTo = promotedTo;
         string hashCode = "";
-        hashCode += (int) Piece.pieceToChar[pieceType];
-        hashCode += fromPos;
         hashCode += fromPos;
         hashCode += toPos;
-        hashCode += toPos;
-        hashCode += Convert.ToInt32(capturePiece);
-        hashCode += Convert.ToInt32(promotePiece);
         hashCode += (int) Piece.pieceToChar[promotedTo];
         this.hashID = Int64.Parse(hashCode);
     }
@@ -274,10 +270,10 @@ public class Move{
                     }
                 }
                 if (fromPos == -1)
-            {
-                // throw error
-                throw new ArgumentException("could not find piece on board with requested legal move");
-            }
+                {
+                    // throw error
+                    throw new ArgumentException("could not find piece on board with requested legal move");
+                }
             }
             
         }
@@ -343,7 +339,7 @@ public class Move{
             throw new ArgumentException("illegal position notation!");
         }
 
-        return (file-'a')*8 + (rank-'1');
+        return (file-'a') + (rank-'1')*8;
     }
 
     public override bool Equals(object obj)

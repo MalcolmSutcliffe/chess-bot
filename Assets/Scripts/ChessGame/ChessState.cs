@@ -9,6 +9,7 @@ public class ChessState{
     public int halfClock {get; private set;} // time since last capture or pawn move used for draws
     public int fullMoveCount {get; private set;}
     public Dictionary<string, int> stateHistory {get; private set;}
+    public string gameMoves {get; private set;}
     
     public Player playerWhite {get; private set;}
     public Player playerBlack {get; private set;}
@@ -28,6 +29,7 @@ public class ChessState{
         this.fullMoveCount = 1;
 
         this.stateHistory = new Dictionary<string, int>();
+        this.gameMoves = "";
         
         for (int x = 0; x < 64; x++)
         {
@@ -43,6 +45,7 @@ public class ChessState{
         this.playerBlack = new Player(PlayerType.Black);
 
         this.stateHistory = new Dictionary<string, int>();
+        this.gameMoves = "";
 
         for (int x = 0; x < 64; x++)
         {
@@ -175,15 +178,27 @@ public class ChessState{
     }
 
     
-    public void MovePiece(Move move)
+    public void MovePiece(Move move, bool isVirtual = false)
     {
         int fromPos = move.fromPos;
         int toPos = move.toPos;
         bool promotePiece = move.promotePiece;
         PieceType promotedTo = move.promotedTo;
 
+        if (!isVirtual)
+        {
+            string moveSAN = Move.EncodeMoveSAN(move, this);
+            UpdateMoveString(moveSAN);
+        }
+
         // check that position has a piece
         if (!this.boardState[fromPos].containsPiece)
+        {
+            return;
+        }
+
+        // check is correct piece
+        if (this.boardState[fromPos].piece.playerType != this.activePlayer.playerType)
         {
             return;
         }
@@ -195,6 +210,33 @@ public class ChessState{
         if (move.capturePiece || piece.pieceType == PieceType.Pawn)
         {
             halfClock = 0;
+        }
+
+        // rook castling rights
+        if (piece.pieceType == PieceType.Rook)
+        {
+            if (this.activePlayer.playerType == PlayerType.White)
+            {
+                if (fromPos == 0)
+                {
+                    this.playerWhite.king.queenCastlingRights = false;
+                }
+                if (fromPos == 7)
+                {
+                    this.playerWhite.king.kingCastlingRights = false;
+                }
+            }
+            else if (this.activePlayer.playerType == PlayerType.Black)
+            {
+                if (fromPos == 56)
+                {
+                    this.playerBlack.king.queenCastlingRights = false;
+                }
+                if (fromPos == 63)
+                {
+                    this.playerBlack.king.kingCastlingRights = false;
+                }
+            }
         }
 
         // EDGE CASE: castle move (only move where 2 pieces are moved)
@@ -214,6 +256,11 @@ public class ChessState{
             {
                 rookFromPos = fromPos+3;
                 rookToPos = toPos-1;
+            }
+
+            if (!this.boardState[rookFromPos].containsPiece)
+            {
+                return;
             }
 
             Piece rookPiece = this.boardState[rookFromPos].piece;
@@ -250,7 +297,6 @@ public class ChessState{
         }
         
         this.previousMove = new int[]{fromPos, toPos};
-
         EndTurn();
     }
 
@@ -287,35 +333,140 @@ public class ChessState{
 
     public bool IsKingInCheck(PlayerType playerType, int kingPosition = -1)
     {
-        List<Piece> piecesToCheck = new List<Piece>();
-        
-        if (playerType == PlayerType.White)
-        {
-            piecesToCheck = playerBlack.pieces;
-        }
-        if (playerType == PlayerType.Black)
-        {
-            piecesToCheck = playerWhite.pieces;
-        }
-
         if (kingPosition == -1)
         {
-            kingPosition = GetKingPosition(playerType);
-        }
-        
-        foreach (var piece in piecesToCheck)
-        {
-            foreach (var possibleMove in piece.GetPossibleMoves(this))
+            if (playerType == PlayerType.White)
             {
-                if (possibleMove.toPos == kingPosition)
+                kingPosition = playerWhite.king.position;
+            }
+            if (playerType == PlayerType.Black)
+            {
+                kingPosition = playerBlack.king.position;
+            }
+        }
+
+        // use slider approach to avoid deep recursion
+
+        // check pawns
+        int direction = 1;
+        if (playerType == PlayerType.Black)
+        {
+            direction = -1;
+        }
+        if (IsInBoard(kingPosition %8 -1, kingPosition/ 8 + direction))
+        {
+            int pawnPos = kingPosition + 8*direction-1;
+            if (boardState[pawnPos].containsPiece && boardState[pawnPos].piece.playerType != playerType && boardState[pawnPos].piece.pieceType == PieceType.Pawn)
+            {
+                return true;
+            }
+        }
+        if (IsInBoard(kingPosition %8 +1, kingPosition/ 8 + direction))
+        {
+            int pawnPos = kingPosition +8*direction+1;
+            if (boardState[pawnPos].containsPiece && boardState[pawnPos].piece.playerType != playerType && boardState[pawnPos].piece.pieceType == PieceType.Pawn)
+            {
+                return true;
+            }
+        }
+
+        // check knights
+        foreach(var move in Knight.KNIGHT_MOVE_DIRECTIONS)
+        {
+            if (!IsInBoard(kingPosition % 8 + move[0], kingPosition /8 + move[1])){
+                continue;
+            }
+            
+            int nPos = kingPosition + move[0] + move[1]*8;
+            
+            if(boardState[nPos].containsPiece && boardState[nPos].piece.playerType != playerType && boardState[nPos].piece.pieceType == PieceType.Knight)
+            {
+                return true;
+            }
+        }
+
+        // check king for redundancy
+        foreach(var move in King.KING_MOVE_DIRECTIONS)
+        {
+            if (!IsInBoard(kingPosition % 8 + move[0], kingPosition /8 + move[1])){
+                continue;
+            }
+            
+            int kPos = kingPosition + move[0] + move[1]*8;
+            
+            if(boardState[kPos].containsPiece && boardState[kPos].piece.playerType != playerType && boardState[kPos].piece.pieceType == PieceType.King)
+            {
+                return true;
+            }
+        }
+
+        // check rook-sliding pieces
+        foreach(var move in Rook.ROOK_MOVE_DIRECTIONS)
+        {
+            int pos = kingPosition;
+            
+            while(IsInBoard(pos % 8 + move[0], pos/8 + move[1]))
+            {
+                pos = pos + move[0] + move[1]*8;
+                
+                if (boardState[pos].containsPiece)
+                {
+                    if (boardState[pos].piece.playerType == playerType)
+                    {
+                        break;
+                    }
+                    if (boardState[pos].piece.playerType != playerType && (boardState[pos].piece.pieceType == PieceType.Rook || boardState[pos].piece.pieceType == PieceType.Queen))
                     {
                         return true;
                     }
+                    break;
                 }
+            
+            }
         }
+
+        // check bishop-sliding pieces
+        foreach(var move in Bishop.BISHOP_MOVE_DIRECTIONS)
+        {
+            int pos = kingPosition;
+            
+            while(IsInBoard(pos % 8 + move[0], pos/8 + move[1]))
+            {
+                pos = pos + move[0] + move[1]*8;
+                if (boardState[pos].containsPiece)
+                {
+                    if (boardState[pos].piece.playerType == playerType)
+                    {
+                        break;
+                    }
+                    else if (boardState[pos].piece.pieceType == PieceType.Bishop || boardState[pos].piece.pieceType == PieceType.Queen)
+                    {
+                        return true;
+                    }
+                    break;
+                }
+            
+            }
+        }
+
         return false;
     }
 
+    public void UpdateMoveString(string moveSAN)
+    {
+        if (activePlayer.playerType == PlayerType.White)
+        {
+            this.gameMoves += this.fullMoveCount;
+            this.gameMoves += '.';
+            this.gameMoves += moveSAN;
+            this.gameMoves += " ";
+        }
+        else if (activePlayer.playerType == PlayerType.Black)
+        {
+            this.gameMoves += moveSAN;
+            this.gameMoves += " ";
+        }
+    }
     public void EndTurn()
     {
         if (activePlayer.playerType == PlayerType.White)
@@ -476,6 +627,7 @@ public class ChessState{
     public static ChessState DeepCopy(ChessState chessState)
     {
         ChessState newChessState = new ChessState();
+        newChessState.gameMoves = chessState.gameMoves;
         for (int x = 0; x < 64; x++)
         {
             newChessState.boardState[x] = new ChessSquare();

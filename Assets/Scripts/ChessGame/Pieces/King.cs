@@ -45,7 +45,7 @@ public class King : Piece
         foreach (var move in possibleMoves)
         {
             ChessState virtualBoard = ChessState.DeepCopy(chessState);
-            virtualBoard.MovePiece(move);
+            virtualBoard.MovePiece(move, true);
             if (virtualBoard.IsKingInCheck(this.playerType, virtualBoard.GetKingPosition(this.playerType)))
             {
                 continue;
@@ -136,8 +136,6 @@ public class King : Piece
                 return false;
             }
         }
-        
-        
         return true;
     }
 
