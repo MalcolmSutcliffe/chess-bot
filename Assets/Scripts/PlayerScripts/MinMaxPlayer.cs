@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class MinMaxPlayer : ChessPlayer {
+public abstract class MinMaxPlayer : AIAgent {
 
     private int maxDepth;
     private Dictionary<string, (int, float)> searchCache;
@@ -15,7 +15,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
         this.searchCache = new Dictionary<string, (int, float)>();
     }
     
-    public override OptionalMove GetMove(ChessState chessState)
+    public override Move GetMove(ChessState chessState)
     {
         // check opening database
         List<Move> openingMoves = OpeningTree.GetOpeningMove(chessState);
@@ -23,7 +23,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
         {
             
             Move openingMove =openingMoves[Random.Range(0, openingMoves.Count)];
-            return new OptionalMove(openingMove);
+            return openingMove;
         } 
         // time move
         Stopwatch stopwatch = Stopwatch.StartNew(); 
@@ -60,7 +60,7 @@ public abstract class MinMaxPlayer : ChessPlayer {
 
         stopwatch.Stop();
         UnityEngine.Debug.Log("Depth: " + maxDepth + " time: " + stopwatch.ElapsedMilliseconds);
-        return new OptionalMove(bestMove);
+        return bestMove;
     }
 
     // min max algo with alpha-beta pruning, search caching

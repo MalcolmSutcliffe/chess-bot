@@ -39,6 +39,8 @@ public class Game : MonoBehaviour
         board.DrawGrid(size);
         chessState = new ChessState(STARTING_POSITION);
 
+        EventManager.instance.MoveOccurred += MoveOccurred;
+
         InitializeGame();
     }
 
@@ -53,33 +55,28 @@ public class Game : MonoBehaviour
     {
         if (isGameActive)
         {
-            OptionalMove move;
             if (chessState.activePlayer.playerType == PlayerType.White)
             {
-                move = playerWhite.GetMove(ChessState.DeepCopy(chessState));
+                playerWhite.Update(ChessState.DeepCopy(chessState));
             }
             else
             {
-                move = playerBlack.GetMove(ChessState.DeepCopy(chessState));
+                playerBlack.Update(ChessState.DeepCopy(chessState));
             }
-            // check if move was returned
-            if (!move.containsMove)
-            {
-                return;
-            }
-            if (!chessState.GetLegalMoves().Contains(move.move))
-            {
-                return;
-            }
-            MoveOccured(move.move);
-            EventManager.instance.OnTurnEnded();
-            print(chessState.gameMoves);
         }
     }
 
-    public void MoveOccured(Move move)
-    {  
+    public void MoveOccurred(Move move)
+    {
+        // if not legal move
+        if (!chessState.GetLegalMoves().Contains(move))
+        {
+            return;
+        }
+
         chessState.MovePiece(move);
+
+        print(chessState.gameMoves);
         
         DrawBoard();
         
